@@ -1,3 +1,9 @@
+'use client';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useToast } from '@/components/Toast';
+import { formatCurrency } from '@/lib/utils';
 import Modal from '@/components/Modal';
 import { db, cacheData, getCachedData } from '@/lib/offline-db';
 
