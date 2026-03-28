@@ -98,13 +98,47 @@ export default function MenuManagement() {
 
     const saveCategory = async (e) => {
         e.preventDefault();
-        const method = catForm._id ? 'PUT' : 'POST';
-        const body = catForm._id ? { id: catForm._id, ...catForm } : catForm;
-        await fetch('/api/categories', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        addToast('Category saved', 'success');
-        setShowCatModal(false);
-        setCatForm({ name: '', description: '' });
-        fetchData();
+        try {
+            const method = catForm._id ? 'PUT' : 'POST';
+            const body = catForm._id ? { id: catForm._id, ...catForm } : catForm;
+            const res = await fetch('/api/categories', { 
+                method, 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(body) 
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to save category');
+            }
+
+            addToast(catForm._id ? 'Category updated' : 'Category added', 'success');
+            setShowCatModal(false);
+            setCatForm({ name: '', description: '' });
+            fetchData();
+        } catch (error) {
+            addToast(error.message, 'error');
+        }
+    };
+
+    const handleDeleteCategory = async () => {
+        if (!catForm._id) return;
+        const confirmed = await confirm(`Are you sure you want to delete "${catForm.name}"?`);
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(`/api/categories?id=${catForm._id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to delete category');
+            }
+            addToast('Category deleted successfully', 'success');
+            setShowCatModal(false);
+            setCatForm({ name: '', description: '' });
+            fetchData();
+        } catch (error) {
+            addToast(error.message, 'error');
+        }
     };
 
     const handleImageUpload = async (e) => {
@@ -278,7 +312,16 @@ export default function MenuManagement() {
                         <label>Description</label>
                         <textarea value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} rows={2} />
                     </div>
-                    <button type="submit" className="btn btn-primary">Save Category</button>
+                    <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-md)' }}>
+                        <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                            {catForm._id ? 'Update Category' : 'Save Category'}
+                        </button>
+                        {catForm._id && (
+                            <button type="button" onClick={handleDeleteCategory} className="btn btn-ghost" style={{ color: 'var(--danger)' }}>
+                                🗑️ Delete
+                            </button>
+                        )}
+                    </div>
                 </form>
             </Modal>
         </div>
