@@ -16,7 +16,7 @@ export default function MenuManagement() {
     const { addToast } = useToast();
     const { confirm } = useConfirm();
 
-    const emptyItem = { name: '', category: '', price: '', tax: 5, description: '', image: '', isAvailable: true, isVeg: true, isBestseller: false, ingredients: '' };
+    const emptyItem = { name: '', code: '', category: '', price: '', tax: 5, description: '', image: '', isAvailable: true, isVeg: true, isBestseller: false, ingredients: '' };
     const [form, setForm] = useState(emptyItem);
     const [catForm, setCatForm] = useState({ name: '', description: '' });
 
@@ -133,6 +133,7 @@ export default function MenuManagement() {
                     <table className="data-table">
                         <thead>
                             <tr>
+                                <th>No.</th>
                                 <th>Item</th>
                                 <th>Category</th>
                                 <th>Price</th>
@@ -145,6 +146,7 @@ export default function MenuManagement() {
                         <tbody>
                             {items.map(item => (
                                 <tr key={item._id}>
+                                    <td><span className="badge badge-secondary" style={{ fontWeight: 800 }}>{item.code || '-'}</span></td>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
                                             {item.image && <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-sm)', background: `url(${item.image}) center/cover`, flexShrink: 0 }}></div>}
@@ -185,7 +187,11 @@ export default function MenuManagement() {
             {/* Item Modal */}
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Item' : 'Add Item'} width="600px">
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                    <div className="grid grid-2">
+                    <div className="grid grid-3">
+                        <div className="input-group">
+                            <label>Item Code (3-digits)</label>
+                            <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="001" required maxLength={3} />
+                        </div>
                         <div className="input-group">
                             <label>Name</label>
                             <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />

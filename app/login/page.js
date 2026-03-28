@@ -1,9 +1,6 @@
-'use client';
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
+import { db } from '@/lib/offline-db';
+import bcrypt from 'bcryptjs';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -17,23 +14,64 @@ export default function LoginPage() {
         setError('');
         setLoading(true);
 
-        const result = await signIn('credentials', {
-            email,
-            password,
-            redirect: false,
-        });
+        try {
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false,
+            });
 
-        if (result?.error) {
-            setError(result.error);
+            if (result?.error) {
+                // If network error, attempt offline login
+                if (result.error.toLowerCase().includes('fetch') || result.status === 401) {
+                    const offlineUser = await db.users.get({ email });
+                    if (offlineUser) {
+                        const passwordsMatch = await bcrypt.compare(password, offlineUser.passwordHash);
+                        if (passwordsMatch) {
+                            addToast('Logging in offline...', 'info');
+                            // We can't actually trigger NextAuth session offline easily without a server,
+                            // but we can set a temporary local session flag for the PWA.
+                            localStorage.setItem('offline_session', JSON.stringify({
+                                email: offlineUser.email,
+                                name: offlineUser.name,
+                                role: offlineUser.role,
+                                expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                            }));
+                            
+                            if (offlineUser.role === 'admin') router.push('/admin/dashboard');
+                            else if (offlineUser.role === 'delivery') router.push('/delivery');
+                            else router.push('/menu');
+                            return;
+                        }
+                    }
+                }
+                setError(result.error);
+                setLoading(false);
+            } else {
+                // Successful online login - cache the user
+                const res = await fetch('/api/auth/session');
+                const session = await res.json();
+                
+                if (session?.user) {
+                    const salt = await bcrypt.genSalt(10);
+                    const hash = await bcrypt.hash(password, salt);
+                    await db.users.put({
+                        email: session.user.email,
+                        name: session.user.name,
+                        role: session.user.role,
+                        passwordHash: hash
+                    });
+                }
+
+                const role = session?.user?.role;
+                if (role === 'admin') router.push('/admin/dashboard');
+                else if (role === 'delivery') router.push('/delivery');
+                else router.push('/menu');
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('An unexpected error occurred');
             setLoading(false);
-        } else {
-            const res = await fetch('/api/auth/session');
-            const session = await res.json();
-            const role = session?.user?.role;
-
-            if (role === 'admin') router.push('/admin/dashboard');
-            else if (role === 'delivery') router.push('/delivery');
-            else router.push('/menu');
         }
     };
 

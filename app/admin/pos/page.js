@@ -8,7 +8,60 @@ import Modal from '@/components/Modal';
 import { db, cacheData, getCachedData } from '@/lib/offline-db';
 
 export default function AdminPOS() {
+    const [isOnline, setIsOnline] = useState(true);
+    const [pendingSync, setPendingSync] = useState(0);
+
     const [itemCode, setItemCode] = useState('');
+
+    // Background Sync Logic
+    useEffect(() => {
+        const checkOnline = () => setIsOnline(navigator.onLine);
+        const updatePendingCount = async () => {
+            const count = await db.offlineOrders.where('synced').equals(0).count();
+            setPendingSync(count);
+        };
+
+        const syncOfflineOrders = async () => {
+            if (!navigator.onLine) return;
+            const pending = await db.offlineOrders.where('synced').equals(0).toArray();
+            if (pending.length === 0) return;
+
+            addToast(`Syncing ${pending.length} offline orders...`, 'info');
+            for (const order of pending) {
+                try {
+                    const { id, synced, ...orderData } = order;
+                    const res = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+                    if (res.ok) {
+                        await db.offlineOrders.update(id, { synced: 1 });
+                    }
+                } catch (err) {
+                    console.error('Sync failed for order:', order.id, err);
+                    break;
+                }
+            }
+            updatePendingCount();
+            addToast('Offline orders synced successfully!', 'success');
+        };
+
+        window.addEventListener('online', () => { checkOnline(); syncOfflineOrders(); });
+        window.addEventListener('offline', checkOnline);
+        
+        checkOnline();
+        updatePendingCount();
+        syncOfflineOrders();
+
+        const interval = setInterval(updatePendingCount, 10000); // Check for pending every 10s
+
+        return () => {
+            window.removeEventListener('online', syncOfflineOrders);
+            window.removeEventListener('offline', checkOnline);
+            clearInterval(interval);
+        };
+    }, []);
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [tables, setTables] = useState([]);
@@ -29,16 +82,17 @@ export default function AdminPOS() {
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const handleAddByCode = (e) => {
-        if (e && e.key && e.key !== 'Enter') return;
-        
-        const item = items.find(i => i.code === itemCode);
-        if (item) {
-            addToCartPOS(item);
-            setItemCode('');
-            addToast(`Added ${item.name} to cart`, 'success');
-        } else if (itemCode.length === 3) {
-            addToast('Item code not found', 'error');
+    const handleAddByCode = (val) => {
+        setItemCode(val);
+        if (val.length === 3) {
+            const item = items.find(i => i.code === val);
+            if (item) {
+                addToCartPOS(item);
+                setItemCode('');
+                addToast(`Added ${item.name} to cart`, 'success');
+            } else {
+                addToast('Item code not found', 'error');
+            }
         }
     };
     const { data: session } = useSession();
@@ -107,22 +161,26 @@ export default function AdminPOS() {
 
     const placeOrder = async () => {
         if (cart.length === 0) { addToast('Add items first', 'warning'); return; }
+        
+        const orderData = {
+            customerName, customerPhone,
+            deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
+            items: cart.map(i => ({ menuItem: i._id, name: i.name, price: i.price, quantity: i.quantity, specialInstructions: i.specialInstructions })),
+            subtotal, tax, discount, total,
+            type: orderType, paymentMethod,
+            paymentStatus: 'paid',
+            table: selectedTable || undefined,
+            orderNotes: notes,
+            createdBy: session?.user?.id,
+        };
+
         try {
-            const orderData = {
-                customerName, customerPhone,
-                deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
-                items: cart.map(i => ({ menuItem: i._id, name: i.name, price: i.price, quantity: i.quantity, specialInstructions: i.specialInstructions })),
-                subtotal, tax, discount, total,
-                type: orderType, paymentMethod,
-                paymentStatus: 'paid',
-                table: selectedTable || undefined,
-                orderNotes: notes,
-                createdBy: session?.user?.id,
-            };
+            if (!navigator.onLine) throw new Error('offline');
+
             const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
             const order = await res.json();
             
-            if (!res.ok) throw new Error(order.error);
+            if (!res.ok) throw new Error(order.error || 'Failed to place order');
 
             setLastOrder(order);
             setShowPayment(false);
@@ -134,14 +192,13 @@ export default function AdminPOS() {
             setDeliveryAddress({ street: '', city: '', pincode: '' });
             setNotes('');
             setSelectedTable('');
-            addToast('Order placed!', 'success');
+            addToast('Order placed successfully!', 'success');
 
             // Refresh tables
             const t = await fetch('/api/tables').then(r => r.json()).catch(() => getCachedData('tables'));
             setTables(t || []);
         } catch (err) { 
-            // Save to offline local DB if net is down
-            if (!navigator.onLine || err.message === 'Failed to fetch') {
+            if (err.message === 'offline' || !navigator.onLine || err.name === 'TypeError') {
                 const offlineId = `OFF-${Date.now()}`;
                 const offlineOrder = { ...orderData, orderId: offlineId, synced: 0, createdAt: new Date().toISOString() };
                 await db.offlineOrders.add(offlineOrder);
@@ -156,7 +213,8 @@ export default function AdminPOS() {
                 setDeliveryAddress({ street: '', city: '', pincode: '' });
                 setNotes('');
                 setSelectedTable('');
-                addToast('Saved locally (Offline). Syncing later.', 'warning');
+                setPendingSync(prev => prev + 1);
+                addToast('Saved locally (Offline). Will sync automatically.', 'warning');
             } else {
                 addToast(err.message, 'error'); 
             }
@@ -387,10 +445,28 @@ export default function AdminPOS() {
             {/* Left: Menu Grid */}
             <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)', alignItems: 'center' }}>
-                    <h2 style={{
-                        fontSize: 'var(--font-xl)', fontWeight: 800,
-                        background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                    }}>🍽️ BUSHRA POS</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+                        <h2 style={{
+                            fontSize: 'var(--font-xl)', fontWeight: 800,
+                            background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                            margin: 0
+                        }}>🍽️ BUSHRA POS</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'var(--space-xs)' }}>
+                            <div style={{ 
+                                width: 8, height: 8, borderRadius: '50%', 
+                                background: isOnline ? '#22c55e' : '#ef4444',
+                                boxShadow: isOnline ? '0 0 10px rgba(34,197,94,0.4)' : '0 0 10px rgba(239,68,68,0.4)'
+                            }}></div>
+                            <span style={{ fontSize: 'var(--font-xs)', fontWeight: 700, color: isOnline ? 'var(--text-secondary)' : '#ef4444' }}>
+                                {isOnline ? 'ONLINE' : 'OFFLINE'}
+                            </span>
+                            {pendingSync > 0 && (
+                                <span className="badge badge-warning" style={{ fontSize: '9px', padding: '2px 6px' }}>
+                                    {pendingSync} PENDING SYNC
+                                </span>
+                            )}
+                        </div>
+                    </div>
                     <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
                         <input type="text" placeholder="No. (001)" value={itemCode}
                             onChange={e => {
