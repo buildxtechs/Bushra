@@ -16,30 +16,37 @@ async function syncToMongo() {
     const client = new MongoClient(MONGODB_URI);
 
     try {
-        console.log('🚀 Connecting to MongoDB...');
+        console.log('🚀 Connecting to MongoDB for typed sync...');
         await client.connect();
         const db = client.db('restaurant_pos');
+        
+        const catCol = db.collection('categories');
+        const itemCol = db.collection('menuitems');
         
         const catMap = {}; // Map of slug -> ObjectId
 
         // 1. Sync Categories
         if (fs.existsSync(CATEGORIES_FILE)) {
             const categories = JSON.parse(fs.readFileSync(CATEGORIES_FILE, 'utf8'));
-            const catCol = db.collection('categories');
             console.log(`📂 Syncing ${categories.length} categories...`);
             
             for (const cat of categories) {
-                // If the _id is a slug (e.g., 'cat_salad'), we should generate a NEW ObjectId
-                // but keep it consistent for future runs by checking if it already exists.
-                let existing = await catCol.findOne({ slug: cat._id });
-                let targetId = existing ? existing._id : new ObjectId();
+                // Find existing by name or slug
+                let existing = await catCol.findOne({ 
+                    $or: [
+                        { name: cat.name },
+                        { slug: cat._id }
+                    ]
+                });
+                
+                let targetId = (existing && typeof existing._id !== 'string') ? existing._id : new ObjectId();
 
                 await catCol.updateOne(
                     { _id: targetId },
                     { 
                         $set: { 
                             name: cat.name, 
-                            slug: cat._id, // Keep old slug as reference
+                            slug: cat._id, 
                             order: cat.order, 
                             updatedAt: new Date() 
                         } 
@@ -48,22 +55,29 @@ async function syncToMongo() {
                 );
                 catMap[cat._id] = targetId;
             }
-            console.log('✅ Categories synced.');
         }
 
-        // 2. Sync Menu Items
+        // 2. Map known names from the database that might not be in the JSON
+        const allCatsFromDB = await catCol.find({}).toArray();
+        allCatsFromDB.forEach(c => {
+            if (c.slug) catMap[c.slug] = c._id;
+            catMap[c.name.toLowerCase()] = c._id;
+        });
+
+        // 3. Sync Menu Items
         if (fs.existsSync(ITEMS_FILE)) {
             const items = JSON.parse(fs.readFileSync(ITEMS_FILE, 'utf8'));
-            const itemCol = db.collection('menuitems');
             console.log(`🍽️ Syncing ${items.length} menu items...`);
             
             let updated = 0;
             let created = 0;
 
             for (const item of items) {
-                const catId = catMap[item.category];
+                // Try slug first, then name
+                let catId = catMap[item.category] || catMap[item.category.toLowerCase()];
+                
                 if (!catId) {
-                    console.warn(`⚠️ skipping item ${item.name}: Category mapping not found for ${item.category}`);
+                    console.warn(`⚠️ skipping item ${item.name}: Category link not found for ${item.category}`);
                     continue;
                 }
 
@@ -72,7 +86,7 @@ async function syncToMongo() {
                     { 
                         $set: { 
                             code: item.code,
-                            category: catId, // Use real ObjectId
+                            category: catId, 
                             price: item.price,
                             isVeg: item.isVeg,
                             updatedAt: new Date()
