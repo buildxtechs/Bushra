@@ -1,0 +1,858 @@
+[
+  {
+    "_id": "m_s1",
+    "name": "Chicken Caesar Salad",
+    "category": "cat_salad",
+    "price": 159,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_s2",
+    "name": "Coconut Mango Pineapple Salad",
+    "category": "cat_salad",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_s3",
+    "name": "Green Salad",
+    "category": "cat_salad",
+    "price": 99,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_s4",
+    "name": "Hawaiian Chicken Salad",
+    "category": "cat_salad",
+    "price": 149,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_s5",
+    "name": "Hummus",
+    "category": "cat_salad",
+    "price": 119,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_is1",
+    "name": "Chicken Pepper Soup",
+    "category": "cat_ind_soup",
+    "price": 129,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_is2",
+    "name": "Mutton Nalli Soup",
+    "category": "cat_ind_soup",
+    "price": 169,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_cs1",
+    "name": "Cream of Tomato Soup",
+    "category": "cat_cont_soup",
+    "price": 119,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_cs2",
+    "name": "Cream of Chicken Soup",
+    "category": "cat_cont_soup",
+    "price": 129,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs1",
+    "name": "Sweet Corn Soup (Veg)",
+    "category": "cat_chin_soup",
+    "price": 99,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs2",
+    "name": "Sweet Corn Soup (Chk)",
+    "category": "cat_chin_soup",
+    "price": 119,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs3",
+    "name": "Clear Soup (Veg)",
+    "category": "cat_chin_soup",
+    "price": 99,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs4",
+    "name": "Clear Soup (Chk)",
+    "category": "cat_chin_soup",
+    "price": 119,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs5",
+    "name": "Hot and Sour Soup (Veg)",
+    "category": "cat_chin_soup",
+    "price": 99,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs6",
+    "name": "Hot and Sour Soup (Chk)",
+    "category": "cat_chin_soup",
+    "price": 119,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs7",
+    "name": "Manchow Soup (Veg)",
+    "category": "cat_chin_soup",
+    "price": 99,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_chs8",
+    "name": "Manchow Soup (Chk)",
+    "category": "cat_chin_soup",
+    "price": 119,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f1",
+    "name": "Bushra Special Falooda",
+    "category": "cat_falooda",
+    "price": 149,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f2",
+    "name": "Arabian Falooda",
+    "category": "cat_falooda",
+    "price": 139,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f3",
+    "name": "Royal Falooda",
+    "category": "cat_falooda",
+    "price": 119,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f4",
+    "name": "Mini Falooda",
+    "category": "cat_falooda",
+    "price": 109,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f5",
+    "name": "Kesar Falooda",
+    "category": "cat_falooda",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f6",
+    "name": "Rose Falooda",
+    "category": "cat_falooda",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f7",
+    "name": "Red Cherry Falooda",
+    "category": "cat_falooda",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_f8",
+    "name": "Tender Coconut Falooda",
+    "category": "cat_falooda",
+    "price": 169,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic1",
+    "name": "Vanilla Ice Cream",
+    "category": "cat_icecreams",
+    "price": 69,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic2",
+    "name": "Chocolate Ice Cream",
+    "category": "cat_icecreams",
+    "price": 79,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic3",
+    "name": "Strawberry Ice Cream",
+    "category": "cat_icecreams",
+    "price": 69,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic4",
+    "name": "Butterscotch Ice Cream",
+    "category": "cat_icecreams",
+    "price": 79,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic5",
+    "name": "Blackcurrant Ice Cream",
+    "category": "cat_icecreams",
+    "price": 79,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic6",
+    "name": "Pista Ice Cream",
+    "category": "cat_icecreams",
+    "price": 79,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic7",
+    "name": "Mango Ice Cream",
+    "category": "cat_icecreams",
+    "price": 69,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ic8",
+    "name": "Coconut Ice Cream",
+    "category": "cat_icecreams",
+    "price": 89,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_mj1",
+    "name": "Fresh Lemon Soda",
+    "category": "cat_mojito",
+    "price": 55,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_mj2",
+    "name": "Lemon Mint Soda",
+    "category": "cat_mojito",
+    "price": 69,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_mj3",
+    "name": "Blueberry Mojito",
+    "category": "cat_mojito",
+    "price": 89,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_mj4",
+    "name": "Lemon Mint Mojito",
+    "category": "cat_mojito",
+    "price": 89,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_mj5",
+    "name": "Pineapple Mojito",
+    "category": "cat_mojito",
+    "price": 89,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_mj6",
+    "name": "Virgin Mojito",
+    "category": "cat_mojito",
+    "price": 89,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_mj7",
+    "name": "Passion Fruit Mojito",
+    "category": "cat_mojito",
+    "price": 89,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g1",
+    "name": "Chicken Masala",
+    "category": "cat_gravy",
+    "price": 130,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g2",
+    "name": "Chicken Pepper Masala",
+    "category": "cat_gravy",
+    "price": 170,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g3",
+    "name": "Kadai Chicken Gravy",
+    "category": "cat_gravy",
+    "price": 160,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g4",
+    "name": "Butter Chicken Gravy",
+    "category": "cat_gravy",
+    "price": 190,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g5",
+    "name": "Chicken Hyderabadi Gravy",
+    "category": "cat_gravy",
+    "price": 180,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g6",
+    "name": "Methi Chicken Gravy",
+    "category": "cat_gravy",
+    "price": 160,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g7",
+    "name": "Chicken Chettinad Gravy",
+    "category": "cat_gravy",
+    "price": 160,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g8",
+    "name": "Chicken Lababdar Gravy",
+    "category": "cat_gravy",
+    "price": 180,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g9",
+    "name": "Punjabi Chicken Gravy",
+    "category": "cat_gravy",
+    "price": 170,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g10",
+    "name": "Chicken Lahori Gravy",
+    "category": "cat_gravy",
+    "price": 180,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g11",
+    "name": "Egg Masala",
+    "category": "cat_gravy",
+    "price": 110,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g12",
+    "name": "Egg Pepper Masala",
+    "category": "cat_gravy",
+    "price": 130,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g13",
+    "name": "Prawn Masala",
+    "category": "cat_gravy",
+    "price": 180,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g14",
+    "name": "Prawn Chettinad Gravy",
+    "category": "cat_gravy",
+    "price": 220,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_g15",
+    "name": "Prawn Pepper Masala",
+    "category": "cat_gravy",
+    "price": 240,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_sh1",
+    "name": "Shawarma Roll",
+    "category": "cat_shawarma",
+    "price": 80,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_sh2",
+    "name": "Special Shawarma Roll",
+    "category": "cat_shawarma",
+    "price": 100,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_sh3",
+    "name": "Mexican Shawarma Roll",
+    "category": "cat_shawarma",
+    "price": 120,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_sh4",
+    "name": "Shawarma Plate",
+    "category": "cat_shawarma",
+    "price": 120,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_sh5",
+    "name": "Special Shawarma Plate",
+    "category": "cat_shawarma",
+    "price": 140,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_sh6",
+    "name": "Mexican Shawarma Plate",
+    "category": "cat_shawarma",
+    "price": 130,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_sh7",
+    "name": "Special Mexican Shawarma Plate",
+    "category": "cat_shawarma",
+    "price": 140,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_qb1",
+    "name": "French Fries (Regular)",
+    "category": "cat_quickbites",
+    "price": 80,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_qb2",
+    "name": "French Fries (Large)",
+    "category": "cat_quickbites",
+    "price": 150,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_qb3",
+    "name": "Masala French Fries (Reg)",
+    "category": "cat_quickbites",
+    "price": 90,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_qb4",
+    "name": "Masala French Fries (Lrg)",
+    "category": "cat_quickbites",
+    "price": 160,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_qb5",
+    "name": "Popcorn Chicken (Regular)",
+    "category": "cat_quickbites",
+    "price": 100,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_qb6",
+    "name": "Popcorn Chicken (Large)",
+    "category": "cat_quickbites",
+    "price": 140,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_qb7",
+    "name": "Broasted Strips Boneless",
+    "category": "cat_quickbites",
+    "price": 160,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_td1",
+    "name": "Mutton Kuttu Parotta",
+    "category": "cat_traditional",
+    "price": 209,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_td2",
+    "name": "Chicken Kuttu Parotta",
+    "category": "cat_traditional",
+    "price": 179,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_td3",
+    "name": "Kaadae Phall Pepper Gravy",
+    "category": "cat_traditional",
+    "price": 209,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_td4",
+    "name": "Mutton Paya (Atukaal)",
+    "category": "cat_traditional",
+    "price": 160,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_td5",
+    "name": "Ceylon Kheema Mutton Parotta",
+    "category": "cat_traditional",
+    "price": 219,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_td6",
+    "name": "Ceylon Kheema Chicken Parotta",
+    "category": "cat_traditional",
+    "price": 189,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp1",
+    "name": "Classic Crispy Burger",
+    "category": "cat_burger",
+    "price": 139,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp2",
+    "name": "Fish Fillet Burger",
+    "category": "cat_burger",
+    "price": 159,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp3",
+    "name": "Paneer Cheese Burger",
+    "category": "cat_burger",
+    "price": 139,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp4",
+    "name": "Spicy Veg Burger",
+    "category": "cat_burger",
+    "price": 109,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp5",
+    "name": "Classic Veg Burger",
+    "category": "cat_burger",
+    "price": 99,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp6",
+    "name": "Spicy Juicy Burger",
+    "category": "cat_burger",
+    "price": 149,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp7",
+    "name": "Tandoori Crispy Burger",
+    "category": "cat_burger",
+    "price": 159,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp8",
+    "name": "Cajun Crispy Chicken Burger",
+    "category": "cat_burger",
+    "price": 139,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp9",
+    "name": "Veg Cheese Pizza",
+    "category": "cat_burger",
+    "price": 169,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp10",
+    "name": "Paneer Cheese Pizza",
+    "category": "cat_burger",
+    "price": 189,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_bp11",
+    "name": "Chicken Cheese Pizza",
+    "category": "cat_burger",
+    "price": 199,
+    "isVeg": false,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j1",
+    "name": "Mosambi Juice",
+    "category": "cat_juices",
+    "price": 60,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j2",
+    "name": "Watermelon Juice",
+    "category": "cat_juices",
+    "price": 50,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j3",
+    "name": "Orange Juice",
+    "category": "cat_juices",
+    "price": 60,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j4",
+    "name": "Apple Juice",
+    "category": "cat_juices",
+    "price": 50,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j5",
+    "name": "Pineapple Juice",
+    "category": "cat_juices",
+    "price": 50,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j6",
+    "name": "Pomegranate Juice",
+    "category": "cat_juices",
+    "price": 60,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j7",
+    "name": "Fresh Lime Juice",
+    "category": "cat_juices",
+    "price": 40,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_j8",
+    "name": "Lemon Mint Cooler",
+    "category": "cat_juices",
+    "price": 60,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms1",
+    "name": "Vanilla Milkshake",
+    "category": "cat_milkshakes",
+    "price": 119,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms2",
+    "name": "Strawberry Milkshake",
+    "category": "cat_milkshakes",
+    "price": 119,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms3",
+    "name": "Chocolate Milkshake",
+    "category": "cat_milkshakes",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms4",
+    "name": "Butterscotch Milkshake",
+    "category": "cat_milkshakes",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms5",
+    "name": "Pista Milkshake",
+    "category": "cat_milkshakes",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms6",
+    "name": "Apple Milkshake",
+    "category": "cat_milkshakes",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms7",
+    "name": "Mango Milkshake",
+    "category": "cat_milkshakes",
+    "price": 119,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms8",
+    "name": "Blackcurrant Milkshake",
+    "category": "cat_milkshakes",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms9",
+    "name": "Dry Fruit Milkshake",
+    "category": "cat_milkshakes",
+    "price": 139,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms10",
+    "name": "KitKat Milkshake",
+    "category": "cat_milkshakes",
+    "price": 159,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms11",
+    "name": "Oreo Milkshake",
+    "category": "cat_milkshakes",
+    "price": 139,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms12",
+    "name": "Dates Milkshake",
+    "category": "cat_milkshakes",
+    "price": 159,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "m_ms13",
+    "name": "Cold Coffee Milkshake",
+    "category": "cat_milkshakes",
+    "price": 129,
+    "isVeg": true,
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "_id": "u1",
+    "name": "Admin User",
+    "email": "admin@restaurant.com",
+    "password": "$2a$12$YohTMW6hmr0GsMkPxFtenuQpFLpGOHTd3e8VZSHKoimA4rFnIqQFe",
+    "phone": "9876543210",
+    "role": "admin",
+    "createdAt": "2026-03-28T15:00:46.508Z"
+  },
+  {
+    "_id": "u2",
+    "name": "Cashier User",
+    "email": "cashier@restaurant.com",
+    "password": "$2a$12$yb.zWDtQ.x1S/U59BgHFkO5XGnPN0fPsxv4YtQZymfqlRt.Ux2mW2",
+    "phone": "9876543211",
+    "role": "cashier",
+    "createdAt": "2026-03-28T15:00:46.510Z"
+  },
+  {
+    "_id": "u3",
+    "name": "Delivery Partner",
+    "email": "delivery@restaurant.com",
+    "password": "$2a$12$aAzE1xfY5bkhBlkn2ymQ.OM5sRWajWqYHSQu6058jqgrOu7S/kr7m",
+    "phone": "9876543212",
+    "role": "delivery",
+    "createdAt": "2026-03-28T15:00:46.510Z"
+  },
+  {
+    "_id": "u4",
+    "name": "John Customer",
+    "email": "john@customer.com",
+    "password": "$2a$12$VK3f9O7ZllK/8fJ052bIP.JMOf8V/CY7vdHiC0hgIVGTjwCfv3SsC",
+    "phone": "9876543213",
+    "role": "customer",
+    "loyaltyPoints": 150,
+    "createdAt": "2026-03-28T15:00:46.510Z"
+  }
+]

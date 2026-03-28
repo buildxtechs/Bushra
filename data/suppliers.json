@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "s1",
+    "name": "Fresh Farms",
+    "contact": "Ravi Kumar",
+    "phone": "9800000001",
+    "email": "fresh@farms.com",
+    "address": "Market Road, City",
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  },
+  {
+    "_id": "s2",
+    "name": "Spice World",
+    "contact": "Anita",
+    "phone": "9800000002",
+    "email": "spice@world.com",
+    "address": "Spice Market, City",
+    "createdAt": "2026-03-28T15:00:46.512Z"
+  }
+]

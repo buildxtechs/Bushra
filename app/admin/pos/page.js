@@ -335,6 +335,40 @@ export default function AdminPOS() {
                         box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
                     }
                 }
+                .tabs {
+                    display: flex;
+                    gap: var(--space-xs);
+                    overflow-x: auto;
+                    padding-bottom: 8px;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                    border-bottom: 1px solid var(--border-light);
+                }
+                .tabs::-webkit-scrollbar {
+                    display: none;
+                }
+                .tab {
+                    padding: 8px 16px;
+                    border-radius: var(--radius-sm);
+                    background: var(--bg-card);
+                    border: 1px solid var(--border);
+                    color: var(--text-secondary);
+                    font-size: var(--font-xs);
+                    font-weight: 600;
+                    white-space: nowrap;
+                    cursor: pointer;
+                    transition: var(--transition-fast);
+                }
+                .tab:hover {
+                    border-color: var(--accent-primary);
+                    color: var(--accent-primary);
+                }
+                .tab.active {
+                    background: var(--gradient-primary);
+                    border-color: transparent;
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(249,115,22,0.2);
+                }
             `}</style>
             {/* Left: Menu Grid */}
             <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

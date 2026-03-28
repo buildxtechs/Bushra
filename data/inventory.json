@@ -1,0 +1,24 @@
+[
+  {
+    "_id": "i1",
+    "name": "Rice (Basmati)",
+    "quantity": 50,
+    "unit": "kg",
+    "minStockLevel": 10,
+    "costPerUnit": 80,
+    "supplier": "s1",
+    "lastRestocked": "2026-03-28T15:00:46.513Z",
+    "createdAt": "2026-03-28T15:00:46.513Z"
+  },
+  {
+    "_id": "i2",
+    "name": "Chicken",
+    "quantity": 30,
+    "unit": "kg",
+    "minStockLevel": 5,
+    "costPerUnit": 200,
+    "supplier": "s1",
+    "lastRestocked": "2026-03-28T15:00:46.513Z",
+    "createdAt": "2026-03-28T15:00:46.513Z"
+  }
+]
