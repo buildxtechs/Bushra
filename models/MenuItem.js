@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const MenuItemSchema = new mongoose.Schema({
+  code: { type: String, unique: true, sparse: true },
   name: { type: String, required: true },
   description: { type: String },
   price: { type: Number, required: true },

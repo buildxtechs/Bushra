@@ -7,8 +7,8 @@
     "minStockLevel": 10,
     "costPerUnit": 80,
     "supplier": "s1",
-    "lastRestocked": "2026-03-28T15:00:46.513Z",
-    "createdAt": "2026-03-28T15:00:46.513Z"
+    "lastRestocked": "2026-03-28T16:40:17.471Z",
+    "createdAt": "2026-03-28T16:40:17.471Z"
   },
   {
     "_id": "i2",
@@ -18,7 +18,7 @@
     "minStockLevel": 5,
     "costPerUnit": 200,
     "supplier": "s1",
-    "lastRestocked": "2026-03-28T15:00:46.513Z",
-    "createdAt": "2026-03-28T15:00:46.513Z"
+    "lastRestocked": "2026-03-28T16:40:17.471Z",
+    "createdAt": "2026-03-28T16:40:17.471Z"
   }
 ]

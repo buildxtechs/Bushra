@@ -8,6 +8,7 @@ import Modal from '@/components/Modal';
 import { db, cacheData, getCachedData } from '@/lib/offline-db';
 
 export default function AdminPOS() {
+    const [itemCode, setItemCode] = useState('');
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [tables, setTables] = useState([]);
@@ -27,6 +28,19 @@ export default function AdminPOS() {
     const [lastOrder, setLastOrder] = useState(null);
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const handleAddByCode = (e) => {
+        if (e && e.key && e.key !== 'Enter') return;
+        
+        const item = items.find(i => i.code === itemCode);
+        if (item) {
+            addToCartPOS(item);
+            setItemCode('');
+            addToast(`Added ${item.name} to cart`, 'success');
+        } else if (itemCode.length === 3) {
+            addToast('Item code not found', 'error');
+        }
+    };
     const { data: session } = useSession();
     const { addToast } = useToast();
 
@@ -377,10 +391,27 @@ export default function AdminPOS() {
                         fontSize: 'var(--font-xl)', fontWeight: 800,
                         background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                     }}>🍽️ BUSHRA POS</h2>
-                    <div style={{ flex: 1 }} />
-                    <input type="search" placeholder="Search items..." value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        style={{ maxWidth: 200, padding: '8px 12px', fontSize: 'var(--font-xs)' }} />
+                    <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                        <input type="text" placeholder="No. (001)" value={itemCode}
+                            onChange={e => {
+                                const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                                setItemCode(val);
+                                if (val.length === 3) {
+                                    const item = items.find(i => i.code === val);
+                                    if (item) {
+                                        addToCartPOS(item);
+                                        setItemCode('');
+                                        addToast(`Added ${item.name}`, 'success');
+                                    }
+                                }
+                            }}
+                            onKeyDown={handleAddByCode}
+                            title="Search by Number (e.g. 001)"
+                            style={{ maxWidth: 80, padding: '8px 12px', fontSize: 'var(--font-xs)', border: '2px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)' }} />
+                        <input type="search" placeholder="Search items..." value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            style={{ maxWidth: 150, padding: '8px 12px', fontSize: 'var(--font-xs)' }} />
+                    </div>
                 </div>
 
                 <div className="tabs" style={{ marginBottom: 'var(--space-sm)' }}>
@@ -424,8 +455,14 @@ export default function AdminPOS() {
                                     height: 100, borderRadius: 'var(--radius-sm)', marginBottom: 8, 
                                     background: item.image ? `url(${item.image}) center/cover` : 'var(--bg-glass-light)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    overflow: 'hidden', border: '1px solid var(--border-light)'
+                                    overflow: 'hidden', border: '1px solid var(--border-light)',
+                                    position: 'relative'
                                 }}>
+                                    <span style={{
+                                        position: 'absolute', top: 4, left: 4, padding: '2px 4px',
+                                        background: 'rgba(0,0,0,0.6)', color: 'white', borderRadius: 4,
+                                        fontSize: 9, fontWeight: 800, zIndex: 1
+                                    }}>{item.code}</span>
                                     {!item.image && <span style={{ fontSize: 32 }}>🍽️</span>}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>

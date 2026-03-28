@@ -8,7 +8,7 @@
     "maxDiscount": 100,
     "usageLimit": 100,
     "expiresAt": "2026-12-31",
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "createdAt": "2026-03-28T16:40:17.471Z"
   },
   {
     "_id": "cp2",
@@ -18,6 +18,6 @@
     "minOrderAmount": 500,
     "usageLimit": 50,
     "expiresAt": "2026-12-31",
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "createdAt": "2026-03-28T16:40:17.471Z"
   }
 ]

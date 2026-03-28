@@ -1,86 +1,92 @@
 [
   {
+    "_id": "cat_biryani",
+    "name": "Biryani",
+    "order": 1,
+    "createdAt": "2026-03-28T16:40:17.470Z"
+  },
+  {
     "_id": "cat_salad",
     "name": "Salad & Dips",
-    "order": 1,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 2,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_ind_soup",
     "name": "Indian Soup",
-    "order": 2,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 3,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_cont_soup",
     "name": "Continental Soup",
-    "order": 3,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 4,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_chin_soup",
     "name": "Chinese Soup",
-    "order": 4,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 5,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_falooda",
     "name": "Falooda",
-    "order": 5,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 6,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_icecreams",
     "name": "Ice Creams",
-    "order": 6,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 7,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_mojito",
     "name": "Soda & Mojito",
-    "order": 7,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 8,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_gravy",
     "name": "Gravy - Non Veg",
-    "order": 8,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 9,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_shawarma",
     "name": "Shawarma",
-    "order": 9,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 10,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_quickbites",
     "name": "Quick Bites",
-    "order": 10,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 11,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_traditional",
     "name": "Traditional",
-    "order": 11,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 12,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_burger",
     "name": "Burger & Pizza",
-    "order": 12,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 13,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_juices",
     "name": "Fresh Juices",
-    "order": 13,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 14,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   },
   {
     "_id": "cat_milkshakes",
     "name": "Milkshakes",
-    "order": 14,
-    "createdAt": "2026-03-28T15:00:46.512Z"
+    "order": 15,
+    "createdAt": "2026-03-28T16:40:17.470Z"
   }
 ]
