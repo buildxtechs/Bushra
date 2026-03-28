@@ -8,12 +8,6 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    // Include data files in the serverless bundle for Vercel
-    outputFileTracingIncludes: {
-      '/api/**': ['./data/**'],
-    },
-  },
 };
 
 module.exports = nextConfig;
