@@ -32,6 +32,9 @@ export async function POST(req) {
         const newItem = await db.insert('menuitems', data);
         return NextResponse.json(newItem, { status: 201 });
     } catch (error) {
+        if (error.code === 11000 || error.message?.includes('E11000')) {
+            return NextResponse.json({ error: 'Item code already exists. Please use a unique number.' }, { status: 400 });
+        }
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -52,6 +55,9 @@ export async function PUT(req) {
         await db.update('menuitems', { _id: id }, updateData);
         return NextResponse.json({ success: true });
     } catch (error) {
+        if (error.code === 11000 || error.message?.includes('E11000')) {
+            return NextResponse.json({ error: 'Item code already exists. Please use a unique number.' }, { status: 400 });
+        }
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

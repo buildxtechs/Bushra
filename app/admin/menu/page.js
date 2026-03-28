@@ -37,15 +37,31 @@ export default function MenuManagement() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Sanitize data to remove immutable internal MongoDB fields
+            const { _id, createdAt, updatedAt, __v, ...itemData } = form;
+            
             const data = {
-                ...form, price: parseFloat(form.price), tax: parseFloat(form.tax),
-                ingredients: typeof form.ingredients === 'string' ? form.ingredients.split(',').map(s => s.trim()).filter(Boolean) : form.ingredients
+                ...itemData,
+                price: parseFloat(form.price),
+                tax: parseFloat(form.tax),
+                ingredients: typeof form.ingredients === 'string' 
+                    ? form.ingredients.split(',').map(s => s.trim()).filter(Boolean) 
+                    : form.ingredients
             };
+
             const method = editing ? 'PUT' : 'POST';
             if (editing) data.id = editing._id;
-            const res = await fetch('/api/menu', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            if (!res.ok) throw new Error('Failed');
-            addToast(editing ? 'Item updated' : 'Item added', 'success');
+
+            const res = await fetch('/api/menu', { 
+                method, 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(data) 
+            });
+
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Failed to save item');
+
+            addToast(editing ? 'Item updated successfully' : 'Item added successfully', 'success');
             setShowModal(false);
             setEditing(null);
             setForm(emptyItem);
@@ -188,13 +204,13 @@ export default function MenuManagement() {
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Item' : 'Add Item'} width="600px">
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
                     <div className="grid grid-3">
-                        <div className="input-group">
-                            <label>Item Code (3-digits)</label>
-                            <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="001" required maxLength={3} />
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: 'var(--font-xs)', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>Item Name</label>
+                            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Mutton Biryani" required />
                         </div>
-                        <div className="input-group">
-                            <label>Name</label>
-                            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                        <div style={{ width: 100 }}>
+                            <label style={{ display: 'block', fontSize: 'var(--font-xs)', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>Code (3-digit)</label>
+                            <input value={form.code || ''} onChange={e => setForm({ ...form, code: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="001" maxLength={3} title="Unique 3-digit code for POS search" />
                         </div>
                         <div className="input-group">
                             <label>Category</label>
