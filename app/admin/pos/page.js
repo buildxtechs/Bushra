@@ -82,18 +82,20 @@ export default function AdminPOS() {
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const handleAddByCode = (val) => {
-        setItemCode(val);
+    const findAndAddByCode = (val) => {
         if (val.length === 3) {
             const item = items.find(i => i.code === val);
             if (item) {
                 addToCartPOS(item);
                 setItemCode('');
                 addToast(`Added ${item.name} to cart`, 'success');
+                return true;
             } else {
                 addToast('Item code not found', 'error');
+                return false;
             }
         }
+        return false;
     };
     const { data: session } = useSession();
     const { addToast } = useToast();
@@ -473,17 +475,19 @@ export default function AdminPOS() {
                                 const val = e.target.value.replace(/\D/g, '').slice(0, 3);
                                 setItemCode(val);
                                 if (val.length === 3) {
-                                    const item = items.find(i => i.code === val);
-                                    if (item) {
-                                        addToCartPOS(item);
-                                        setItemCode('');
-                                        addToast(`Added ${item.name}`, 'success');
-                                    }
+                                    findAndAddByCode(val);
                                 }
                             }}
-                            onKeyDown={handleAddByCode}
                             title="Search by Number (e.g. 001)"
-                            style={{ maxWidth: 80, padding: '8px 12px', fontSize: 'var(--font-xs)', border: '2px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)' }} />
+                            style={{ 
+                                maxWidth: 80, 
+                                padding: '8px 12px', 
+                                fontSize: 'var(--font-xs)', 
+                                border: '2px solid var(--accent-primary)', 
+                                borderRadius: 'var(--radius-sm)',
+                                textAlign: 'center',
+                                fontWeight: 800
+                            }} />
                         <input type="search" placeholder="Search items..." value={search}
                             onChange={e => setSearch(e.target.value)}
                             style={{ maxWidth: 150, padding: '8px 12px', fontSize: 'var(--font-xs)' }} />
