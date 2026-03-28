@@ -1,142 +1,91 @@
 'use client';
+import { useState, useEffect } from 'react';
 
 export default function LoadingAnimation({ fullScreen = false }) {
+    const [logo, setLogo] = useState('/images/logo.png');
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data && data.logoUrl) setLogo(data.logoUrl);
+            } catch (err) {
+                // Fallback to default logo already set in state
+            }
+        };
+        fetchSettings();
+    }, []);
+
     const content = (
-        <div className="restaurant-loader">
-            <div className="pan-container">
-                <div className="pan"></div>
-                <div className="handle"></div>
+        <div className="logo-loader">
+            <div className="logo-container">
+                <img src={logo} alt="Loading..." className="pulsing-logo" 
+                    onError={(e) => { e.target.src = '/images/logo.png'; }} />
+                <div className="glow"></div>
             </div>
-            <div className="food">
-                <div className="food-item egg"></div>
-            </div>
-            <div className="steam-container">
-                <div className="steam steam-1"></div>
-                <div className="steam steam-2"></div>
-                <div className="steam steam-3"></div>
-            </div>
-            <p className="loading-text">Cooking up your content...</p>
+            <p className="loading-text">BUSHRA FAMILY RESTAURANT</p>
 
             <style jsx>{`
-        .restaurant-loader {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          width: 200px;
-          height: 150px;
-        }
-
-        .pan-container {
-          display: flex;
-          align-items: flex-end;
-          z-index: 2;
-        }
-
-        .pan {
-          width: 80px;
-          height: 20px;
-          background: #333;
-          border-radius: 0 0 40px 40px;
-          position: relative;
-          animation: pan-toss 1.5s ease-in-out infinite;
-          transform-origin: right top;
-        }
-
-        .handle {
-          width: 50px;
-          height: 8px;
-          background: #222;
-          border-radius: 4px;
-          margin-bottom: 12px;
-          margin-left: -5px;
-          animation: handle-toss 1.5s ease-in-out infinite;
-          transform-origin: right center;
-        }
-
-        .food {
-          position: absolute;
-          top: 40px;
-          left: 50px;
-          z-index: 1;
-        }
-
-        .food-item {
-          width: 30px;
-          height: 30px;
-          background: #fadbd8;
-          border-radius: 50%;
-          position: relative;
-          animation: food-toss 1.5s ease-in-out infinite;
-        }
-
-        .food-item::after {
-          content: '';
-          position: absolute;
-          top: 8px;
-          left: 8px;
-          width: 14px;
-          height: 14px;
-          background: #f1c40f;
-          border-radius: 50%;
-        }
-
-        .steam-container {
-          position: absolute;
-          top: 10px;
-          left: 60px;
-          display: flex;
-          gap: 15px;
-        }
-
-        .steam {
-          width: 6px;
-          height: 20px;
-          background: rgba(255, 255, 255, 0.4);
-          border-radius: 10px;
-          filter: blur(2px);
-          animation: steam-rise 2s ease-out infinite;
-        }
-
-        .steam-1 { animation-delay: 0s; }
-        .steam-2 { animation-delay: 0.6s; height: 25px; }
-        .steam-3 { animation-delay: 1.2s; }
-
-        .loading-text {
-          margin-top: 20px;
-          font-weight: 600;
-          color: var(--accent-primary);
-          font-size: var(--font-sm);
-          animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pan-toss {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(-15deg); }
-        }
-
-        @keyframes handle-toss {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(-15deg); }
-        }
-
-        @keyframes food-toss {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-40px) rotate(180deg); }
-        }
-
-        @keyframes steam-rise {
-          0% { transform: translateY(0) scale(1); opacity: 0; }
-          20% { opacity: 0.6; }
-          100% { transform: translateY(-30px) scale(1.5); opacity: 0; }
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 1; }
-        }
-      `}</style>
+                .logo-loader {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .logo-container {
+                    position: relative;
+                    width: 120px;
+                    height: 120px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 15px;
+                }
+                .pulsing-logo {
+                    width: 90px;
+                    height: 90px;
+                    object-fit: contain;
+                    z-index: 2;
+                    animation: pulse-logo 2s ease-in-out infinite;
+                    filter: drop-shadow(0 0 10px rgba(0,0,0,0.1));
+                }
+                .glow {
+                    position: absolute;
+                    width: 70px;
+                    height: 70px;
+                    background: var(--accent-primary);
+                    border-radius: 50%;
+                    filter: blur(30px);
+                    opacity: 0.3;
+                    z-index: 1;
+                    animation: pulse-glow 2s ease-in-out infinite;
+                }
+                .loading-text {
+                    font-weight: 800;
+                    color: var(--text-primary);
+                    font-size: 12px;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    opacity: 0.7;
+                    animation: text-shine 2s linear infinite;
+                    background: linear-gradient(to right, var(--text-primary) 20%, var(--accent-primary) 50%, var(--text-primary) 80%);
+                    background-size: 200% auto;
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                @keyframes pulse-logo {
+                    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(249,115,22,0.2)); }
+                    50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(249,115,22,0.4)); }
+                }
+                @keyframes pulse-glow {
+                    0%, 100% { transform: scale(1); opacity: 0.2; }
+                    50% { transform: scale(1.8); opacity: 0.5; }
+                }
+                @keyframes text-shine {
+                    to { background-position: 200% center; }
+                }
+            `}</style>
         </div>
     );
 

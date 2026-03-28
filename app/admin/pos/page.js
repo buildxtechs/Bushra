@@ -148,11 +148,39 @@ export default function AdminPOS() {
         }
     };
 
+    const sendWhatsAppBill = () => {
+        if (!lastOrder) return;
+        const phone = customerPhone || lastOrder.customerPhone;
+        if (!phone) {
+            addToast('Please enter customer phone number', 'warning');
+            return;
+        }
+
+        const message = `*${settings?.restaurantName || 'BUSHRA FAMILY RESTAURANT'}*\n` +
+            `---------------------------\n` +
+            `*Order ID:* ${lastOrder.orderId}\n` +
+            `*Date:* ${new Date(lastOrder.createdAt).toLocaleDateString()}\n` +
+            `*Time:* ${new Date(lastOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n` +
+            `---------------------------\n` +
+            lastOrder.items.map(i => `• ${i.name} x ${i.quantity} = ₹${(i.price * i.quantity).toFixed(0)}`).join('\n') +
+            `\n---------------------------\n` +
+            `*Subtotal:* ₹${lastOrder.subtotal.toFixed(2)}\n` +
+            (lastOrder.tax > 0 ? `*Tax:* ₹${lastOrder.tax.toFixed(2)}\n` : '') +
+            (lastOrder.discount > 0 ? `*Discount:* -₹${lastOrder.discount.toFixed(2)}\n` : '') +
+            `*TOTAL: ₹${lastOrder.total.toFixed(2)}*\n` +
+            `---------------------------\n` +
+            `${settings?.billFooter?.replace(/\\n/g, '\n') || 'Thank you! Visit again 🙏'}`;
+
+        const cleanPhone = phone.replace(/\D/g, '');
+        const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+        const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
     const printReceipt = () => {
         if (!lastOrder) return;
         const win = window.open('', '_blank');
         
-        // Group taxes
         const taxGroups = {};
         lastOrder.items.forEach(item => {
             const tr = item.tax || 0;
@@ -161,97 +189,103 @@ export default function AdminPOS() {
         });
 
         win.document.write(`
-      <html><head><title>Receipt</title>
+      <html><head><title>Receipt - ${lastOrder.orderId}</title>
       <style>
-        body { font-family: 'Inter', system-ui, sans-serif; max-width: 320px; margin: 0 auto; padding: 10px; color: #333; }
+        @page { margin: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            width: 80mm; 
+            margin: 0; 
+            padding: 4mm; 
+            color: #000;
+            font-size: 10pt;
+            line-height: 1.3;
+        }
         .center { text-align: center; }
-        .right { text-align: right; }
         .bold { font-weight: 700; }
-        .line { border-top: 1px dashed #000; margin: 8px 0; }
-        .header { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-        .info { font-size: 11px; line-height: 1.3; }
-        .table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 5px; }
-        .table th { border-bottom: 2px solid #333; padding: 4px 0; text-align: left; }
-        .table td { padding: 4px 0; vertical-align: top; }
-        .total-row { display: flex; justify-content: space-between; font-size: 12px; margin-top: 3px; }
-        .sn { width: 20px; }
-        .qty { width: 30px; text-align: center; }
-        .price { width: 60px; text-align: right; }
-        .amt { width: 60px; text-align: right; }
-        .sleek-header { background: #0076bf; height: 40px; width: 40px; transform: rotate(45deg); position: absolute; top: -20px; left: -20px; }
+        .extra-bold { font-weight: 800; }
+        .line { border-top: 1px dashed #000; margin: 3mm 0; }
+        .header { font-size: 13pt; margin-bottom: 1mm; }
+        .info { font-size: 8.5pt; color: #333; }
+        .table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 2mm; }
+        .table th { border-bottom: 1px solid #000; padding: 1.5mm 0; text-align: left; }
+        .table td { padding: 1.5mm 0; vertical-align: top; }
+        .total-row { display: flex; justify-content: space-between; font-size: 10pt; margin-top: 1mm; }
+        .qty { width: 12%; text-align: center; }
+        .price { width: 22%; text-align: right; }
+        .amt { width: 22%; text-align: right; }
+        img { max-height: 45px; width: auto; margin-bottom: 2mm; filter: grayscale(1); }
       </style></head><body>
-      <div class="sleek-header"></div>
-      ${settings?.logoUrl ? `<div class="center"><img src="${settings.logoUrl}" style="max-height: 50px; margin-bottom: 10px;"></div>` : ''}
-      <div class="center header">====================</div>
-      <div class="center header">${settings?.restaurantName || 'BUSHRA FAMILY RESTAURANT'}</div>
-      <div class="center header">====================</div>
-      <div class="center info">${settings?.billHeader || '496/2 Bangalore Main Road,\nSS Lodge Ground Floor,\nChengam - 606 709'}</div>
-      <div class="center info" style="margin-top: 5px;">Ph: ${settings?.phone || '8838993915, 7603947276\n9361060673'}</div>
-      ${settings?.gstin ? `<div class="center info">GSTIN : ${settings.gstin}</div>` : ''}
+      <div class="center">
+        ${settings?.logoUrl ? `<img src="${settings.logoUrl}">` : ''}
+        <div class="header extra-bold">${settings?.restaurantName || 'BUSHRA FAMILY RESTAURANT'}</div>
+        <div class="info">${settings?.billHeader || '496/2 Bangalore Main Road, SS Lodge Ground Floor, Chengam'}</div>
+        <div class="info">Ph: ${settings?.phone || '8838993915'}</div>
+      </div>
       
       <div class="line"></div>
-      <div style="display:flex; justify-content:space-between; font-size:11px;" class="bold">
+      <div style="display:flex; justify-content:space-between; font-size:8.5pt;">
         <span>Date: ${new Date(lastOrder.createdAt).toLocaleDateString()}</span>
         <span>Time: ${new Date(lastOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
-      <div style="font-size:11px;" class="bold">Bill No: ${lastOrder.orderId}</div>
+      <div style="font-size:9pt;" class="bold">Bill No: ${lastOrder.orderId}</div>
       <div class="line"></div>
       
       <table class="table">
         <thead>
           <tr>
-            <th class="sn">SN</th>
-            <th>Item</th>
+            <th style="width:44%">Item</th>
             <th class="qty">Qty</th>
-            <th class="price">Price</th>
+            <th class="price">Rate</th>
             <th class="amt">Amt</th>
           </tr>
         </thead>
         <tbody>
-          ${lastOrder.items.map((i, idx) => {
-            const tr = i.tax || 0;
-            const lineAmt = (i.price * i.quantity) * (1 + tr/100);
-            return `
+          ${lastOrder.items.map((i) => `
             <tr>
-              <td class="sn">${idx + 1}</td>
-              <td>${i.name} ${tr > 0 ? `<br><small style="color:#666">${tr}% Tax Item</small>` : ''}</td>
+              <td>${i.name}</td>
               <td class="qty">${i.quantity}</td>
-              <td class="price">${i.price.toFixed(2)}</td>
-              <td class="amt bold">${lineAmt.toFixed(2)}</td>
-            </tr>`;
-          }).join('')}
+              <td class="price">${i.price.toFixed(0)}</td>
+              <td class="amt bold">${(i.price * i.quantity).toFixed(0)}</td>
+            </tr>
+          `).join('')}
         </tbody>
       </table>
       
       <div class="line"></div>
-      <div class="total-row">
-        <span>Subtotal</span>
-        <span>${lastOrder.items.reduce((s,i) => s + i.quantity, 0)}</span>
-        <span class="bold">₹ ${lastOrder.subtotal.toFixed(2)}</span>
-      </div>
-      <div class="line"></div>
-      
-      ${Object.entries(taxGroups).sort((a,b) => a[0] - b[0]).map(([rate, amount]) => `
-        <div class="total-row" style="font-size:11px">
-          <span style="flex:1"></span>
-          <span style="width:100px; text-align:right">IGST at ${rate}%</span>
-          <span style="width:60px; text-align:right">${amount.toFixed(2)}</span>
-        </div>
-      `).join('')}
+      <div class="total-row"><span>Subtotal Total</span><span class="bold">₹ ${lastOrder.subtotal.toFixed(2)}</span></div>
+      ${lastOrder.tax > 0 ? `<div class="total-row"><span>GST</span><span>₹ ${lastOrder.tax.toFixed(2)}</span></div>` : ''}
+      ${lastOrder.discount > 0 ? `<div class="total-row"><span>Discount</span><span>-₹ ${lastOrder.discount.toFixed(2)}</span></div>` : ''}
       
       <div class="line"></div>
-      <div class="total-row bold" style="font-size:14px; border-top: 2px solid #333; padding-top:4px">
+      <div class="total-row extra-bold" style="font-size:13pt; padding-top:1mm">
         <span>TOTAL</span>
-        <span>₹ ${lastOrder.total.toFixed(2)}</span>
+        <span>₹ ${lastOrder.total.toFixed(0)}</span>
       </div>
-      <div class="line"></div>
+      <div class="line" style="border-top-style: solid;"></div>
       
-      <div class="center bold" style="font-size:12px; margin-top:10px">${settings?.billFooter || 'THANK YOU!\nVisit Us Again 🙏'}</div>
-      <div class="center" style="font-size:10px; margin-top:20px; color:#999; border-top:1px dashed #ccc; padding-top:10px">---</div>
+      <div class="center bold" style="font-size:9.5pt; margin-top:2mm; letter-spacing: 0.5px;">
+        ${settings?.billFooter?.replace(/\\n/g, '<br>') || 'THANK YOU! VISIT AGAIN 🙏'}
+      </div>
+      
+      <div class="center" style="font-size:7pt; color: #666; margin-top: 4mm;">
+        Printed on ${new Date().toLocaleString()}
+      </div>
+
+      <script>
+        window.onload = () => {
+          setTimeout(() => {
+            window.print();
+            window.onafterprint = () => window.close();
+            // Fallback for browsers that don't support onafterprint or if cancelled
+            setTimeout(() => { if(!window.closed) window.close(); }, 10000);
+          }, 500);
+        };
+      </script>
       </body></html>
     `);
         win.document.close();
-        win.print();
     };
 
     if (loading) return <LoadingAnimation />;
@@ -509,9 +543,14 @@ export default function AdminPOS() {
                                 ₹{lastOrder.total?.toFixed(2)}
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-                            <button onClick={printReceipt} className="btn btn-primary" style={{ flex: 1 }}>🖨️ Print Receipt</button>
-                            <button onClick={() => setShowReceipt(false)} className="btn btn-secondary" style={{ flex: 1 }}>New Order</button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                                <button onClick={printReceipt} className="btn btn-primary" style={{ flex: 1, height: '50px', fontSize: '16px' }}>🖨️ Print Bill</button>
+                                <button onClick={sendWhatsAppBill} className="btn btn-secondary" style={{ flex: 1, height: '50px', fontSize: '16px', background: '#25D366', color: 'white', border: 'none' }}>
+                                    <span style={{ marginRight: '8px' }}>💬</span> WhatsApp
+                                </button>
+                            </div>
+                            <button onClick={() => setShowReceipt(false)} className="btn btn-ghost" style={{ width: '100%', marginTop: 'var(--space-sm)' }}>New Order</button>
                         </div>
                     </div>
                 )}

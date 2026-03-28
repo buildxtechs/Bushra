@@ -28,8 +28,8 @@ export default function AdminDashboard() {
     const handleCleanup = async () => {
         const isConfirmed = await confirm(
             '⚠️ Permanent Cleanup', 
-            'Are you sure? This will permanently delete ALL sales and order data. This action cannot be undone.',
-            { type: 'danger', confirmText: 'Clear Everything' }
+            'Are you sure? This will permanently delete ALL sales, orders, and expenses data. This action cannot be undone.',
+            { type: 'danger', confirmText: 'Clear Sales & Expenses' }
         );
         
         if (!isConfirmed) return;
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
         try {
             const res = await fetch('/api/admin/cleanup', { method: 'POST' });
             if (res.ok) {
-                addToast('Sales data cleared successfully!', 'success');
+                addToast('Sales and Expenses cleared successfully!', 'success');
                 fetchData();
             } else {
                 addToast('Failed to clear sales data.', 'error');
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                         disabled={cleaning}
                         style={{ color: 'var(--danger)', borderColor: 'var(--danger-bg)' }}
                     >
-                        {cleaning ? '⌛ Cleaning...' : '🧹 Cleanup Sales Data'}
+                        {cleaning ? '⌛ Cleaning...' : '🧹 Cleanup Data (Sales & Expenses)'}
                     </button>
                 </div>
             </div>
