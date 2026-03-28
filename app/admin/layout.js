@@ -27,26 +27,45 @@ export default function AdminLayout({ children }) {
                 display: 'none',
                 position: 'fixed',
                 top: 0, left: 0, right: 0,
-                height: 60,
+                height: 70,
                 background: 'var(--bg-glass)',
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(15px)',
                 borderBottom: '1px solid var(--border)',
-                zIndex: 80,
+                zIndex: 110,
                 padding: '0 var(--space-md)',
                 alignItems: 'center',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                boxShadow: 'var(--shadow-md)'
             }}>
                 <button 
                     onClick={() => setIsSidebarOpen(true)}
                     className="btn btn-icon"
-                    style={{ background: 'transparent', border: 'none', fontSize: 24 }}
+                    style={{ 
+                        background: 'rgba(249, 115, 22, 0.1)', 
+                        border: '1px solid rgba(249, 115, 22, 0.2)', 
+                        fontSize: 24,
+                        color: 'var(--accent-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 44,
+                        height: 44,
+                        borderRadius: 'var(--radius-md)'
+                    }}
                 >
                     ☰
                 </button>
-                <div style={{ fontWeight: 800, fontSize: 'var(--font-sm)', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <div style={{ 
+                    fontWeight: 900, 
+                    fontSize: 'var(--font-md)', 
+                    background: 'var(--gradient-primary)', 
+                    WebkitBackgroundClip: 'text', 
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '1px'
+                }}>
                     BUSHRA ADMIN
                 </div>
-                <div style={{ width: 40 }} />
+                <div style={{ width: 44 }} />
             </header>
 
             <div 
