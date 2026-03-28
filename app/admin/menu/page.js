@@ -12,6 +12,7 @@ export default function MenuManagement() {
     const [showCatModal, setShowCatModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState(null);
     const { addToast } = useToast();
     const { confirm } = useConfirm();
@@ -36,6 +37,7 @@ export default function MenuManagement() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSaving(true);
         try {
             // Sanitize data to remove immutable internal MongoDB fields
             const { _id, createdAt, updatedAt, __v, ...itemData } = form;
@@ -66,7 +68,11 @@ export default function MenuManagement() {
             setEditing(null);
             setForm(emptyItem);
             fetchData();
-        } catch (err) { addToast(err.message, 'error'); }
+        } catch (err) { 
+            addToast(err.message, 'error'); 
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleDelete = async (id) => {
@@ -255,8 +261,8 @@ export default function MenuManagement() {
                             <input type="checkbox" checked={form.isAvailable} onChange={e => setForm({ ...form, isAvailable: e.target.checked })} /> Available
                         </label>
                     </div>
-                    <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-end' }}>
-                        {editing ? 'Update Item' : 'Add Item'}
+                    <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-end' }} disabled={saving}>
+                        {saving ? 'Saving...' : (editing ? 'Update Item' : 'Add Item')}
                     </button>
                 </form>
             </Modal>
