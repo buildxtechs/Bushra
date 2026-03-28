@@ -213,18 +213,45 @@ export default function AdminPOS() {
     if (loading) return <LoadingAnimation />;
 
     return (
-        <div className="pos-layout" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 380px', 
-            gap: 'var(--space-md)', 
-            height: 'calc(100vh - 2 * var(--space-md))' 
-        }}>
+        <div className="pos-layout">
             <style jsx>{`
+                .pos-layout {
+                    display: grid;
+                    grid-template-columns: 1fr 380px;
+                    gap: var(--space-md);
+                    height: calc(100vh - 2 * var(--space-md));
+                    overflow: hidden;
+                }
+
                 @media (max-width: 1200px) {
                     .pos-layout {
+                        grid-template-columns: 1fr 320px;
+                        gap: var(--space-sm);
+                    }
+                }
+
+                @media (max-width: 900px) {
+                    .pos-layout {
+                        grid-template-columns: 1fr 280px;
+                        gap: var(--space-xs);
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .pos-layout {
                         grid-template-columns: 1fr;
+                        height: auto;
+                        overflow-y: auto;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .cart-column {
+                        position: sticky;
+                        bottom: 0;
                         height: auto !important;
-                        overflow-y: visible !important;
+                        max-height: 80vh;
+                        z-index: 100;
+                        box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
                     }
                 }
             `}</style>
@@ -252,8 +279,9 @@ export default function AdminPOS() {
 
                 <div style={{
                     flex: 1, overflow: 'auto',
-                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-                    gap: 'var(--space-sm)', alignContent: 'start',
+                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(125px, 1fr))',
+                    gap: 'var(--space-xs)', alignContent: 'start',
+                    paddingRight: '4px'
                 }}>
                     {filteredItems.map(item => {
                         const inCart = cart.find(i => i._id === item._id);
@@ -297,10 +325,11 @@ export default function AdminPOS() {
             </div>
 
             {/* Right: Cart & Bill */}
-            <div style={{
+            <div className="cart-column" style={{
                 background: 'var(--bg-secondary)', border: '1px solid var(--border)',
                 borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column',
-                overflow: 'hidden',
+                overflow: 'hidden', height: '100%',
+                boxShadow: 'var(--shadow-sm)'
             }}>
                 {/* Cart Header */}
                 <div style={{ padding: 'var(--space-md)', borderBottom: '1px solid var(--border)' }}>
