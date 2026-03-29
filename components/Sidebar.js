@@ -46,7 +46,6 @@ export default function Sidebar({ isOpen, onClose }) {
             title: 'Accounts & System',
             links: [
                 { href: '/admin/expenses', label: 'Expenses', icon: '💸' },
-                { href: '/admin/reports', label: 'Reports', icon: '📈' },
                 { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
             ]
         }

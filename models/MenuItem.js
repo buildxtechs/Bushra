@@ -18,7 +18,6 @@ const MenuItemSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-MenuItemSchema.index({ code: 1 });
 MenuItemSchema.index({ name: 1 });
 MenuItemSchema.index({ category: 1 });
 
