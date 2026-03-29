@@ -4,20 +4,32 @@ import { uploadImage } from "@/lib/cloudinary";
 
 export async function GET() {
     try {
+        // Optimize: Calculate sales counts using MongoDB aggregation (much faster for large datasets)
+        const salesStats = await db.aggregate('orders', [
+            {
+                $match: {
+                    $or: [
+                        { status: { $in: ['completed', 'paid', 'served', 'delivered'] } },
+                        { paymentStatus: 'paid' }
+                    ]
+                }
+            },
+            { $unwind: '$items' },
+            {
+                $group: {
+                    _id: { $ifNull: ['$items.item', '$items.menuItem'] },
+                    totalSales: { $sum: '$items.quantity' }
+                }
+            }
+        ]);
+
+        const salesCount = {};
+        salesStats.forEach(stat => {
+            if (stat._id) salesCount[String(stat._id)] = stat.totalSales;
+        });
+
         const menuItems = await db.read('menuitems');
         const categories = await db.read('categories');
-        const orders = await db.read('orders');
-
-        // Calculate sales count per menu item from successful orders
-        const salesCount = {};
-        orders.forEach(order => {
-            if (['completed', 'paid', 'served', 'delivered'].includes(order.status) || order.paymentStatus === 'paid') {
-                order.items.forEach(item => {
-                    const itemId = String(item.item || item.menuItem);
-                    salesCount[itemId] = (salesCount[itemId] || 0) + (item.quantity || 1);
-                });
-            }
-        });
 
         // Manual population and adding salesCount
         const populatedMenu = menuItems.map(item => ({

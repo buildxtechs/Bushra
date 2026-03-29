@@ -6,6 +6,9 @@ import { useToast } from '@/components/Toast';
 import { formatCurrency } from '@/lib/utils';
 import Modal from '@/components/Modal';
 import { db, cacheData, getCachedData } from '@/lib/offline-db';
+import MenuItemCard from '@/components/pos/MenuItemCard';
+import MenuSkeleton from '@/components/pos/MenuSkeleton';
+import { useCallback, useMemo } from 'react';
 
 export default function AdminPOS() {
     const [isOnline, setIsOnline] = useState(true);
@@ -26,7 +29,10 @@ export default function AdminPOS() {
             const pending = await db.offlineOrders.where('synced').equals(0).toArray();
             if (pending.length === 0) return;
 
-            addToast(`Syncing ${pending.length} offline orders...`, 'info');
+            addToast(`Syncing ${pending.length} orders in background...`, 'info');
+            
+            // Optimized: Use Promise.all with small batches if needed, or sequential for stability
+            // For now, staying sequential but faster UI feedback
             for (const order of pending) {
                 try {
                     const { id, synced, ...orderData } = order;
@@ -44,7 +50,6 @@ export default function AdminPOS() {
                 }
             }
             updatePendingCount();
-            addToast('Offline orders synced successfully!', 'success');
         };
 
         window.addEventListener('online', () => { checkOnline(); syncOfflineOrders(); });
@@ -54,7 +59,10 @@ export default function AdminPOS() {
         updatePendingCount();
         syncOfflineOrders();
 
-        const interval = setInterval(updatePendingCount, 10000); // Check for pending every 10s
+        const interval = setInterval(() => {
+            updatePendingCount();
+            if (navigator.onLine) syncOfflineOrders();
+        }, 15000); 
 
         return () => {
             window.removeEventListener('online', syncOfflineOrders);
@@ -102,30 +110,52 @@ export default function AdminPOS() {
 
     useEffect(() => {
         const loadInitialData = async () => {
+            // Instant Load Phase: Load from IndexedDB immediately
             try {
-                const [m, c, t, s] = await Promise.all([
-                    fetch('/api/menu').then(r => r.json()).catch(() => getCachedData('menuItems')),
-                    fetch('/api/categories').then(r => r.json()).catch(() => getCachedData('categories')),
-                    fetch('/api/tables').then(r => r.json()).catch(() => getCachedData('tables')),
-                    fetch('/api/settings').then(r => r.json()).catch(() => getCachedData('settings')),
-                ]);
-
-                setItems(m || []); setCategories(c || []); setTables(t || []); setSettings(s && s.length ? s[0] : s);
-                
-                // Update local cache for next offline run
-                if (navigator.onLine) {
-                    cacheData('menuItems', m);
-                    cacheData('categories', c);
-                    cacheData('tables', t);
-                    cacheData('settings', s);
-                }
-            } catch (err) {
-                console.error('Data load error:', err);
                 const [cm, cc, ct, cs] = await Promise.all([
                     getCachedData('menuItems'), getCachedData('categories'),
                     getCachedData('tables'), getCachedData('settings')
                 ]);
-                setItems(cm); setCategories(cc); setTables(ct); setSettings(cs[0] || cs);
+                
+                if (cm.length) {
+                    setItems(cm); setCategories(cc); setTables(ct);
+                    if (cs && cs.length) setSettings(cs[0]);
+                    setLoading(false); // Immediate visual feedback
+                    console.log('⚡ Loaded from local cache');
+                }
+            } catch (err) {
+                console.warn('Initial cache load failed:', err);
+            }
+
+            // Sync Phase: Fetch latest from API in background (Stale-While-Revalidate)
+            try {
+                const [m, c, t, s] = await Promise.all([
+                    fetch('/api/menu').then(r => r.json()).catch(() => null),
+                    fetch('/api/categories').then(r => r.json()).catch(() => null),
+                    fetch('/api/tables').then(r => r.json()).catch(() => null),
+                    fetch('/api/settings').then(r => r.json()).catch(() => null),
+                ]);
+
+                if (m) {
+                    setItems(m);
+                    cacheData('menuItems', m);
+                }
+                if (c) {
+                    setCategories(c);
+                    cacheData('categories', c);
+                }
+                if (t) {
+                    setTables(t);
+                    cacheData('tables', t);
+                }
+                if (s) {
+                    const settingsData = Array.isArray(s) ? s[0] : s;
+                    setSettings(settingsData);
+                    cacheData('settings', s);
+                }
+                console.log('🌐 Background sync complete');
+            } catch (err) {
+                console.error('Background sync error:', err);
             } finally {
                 setLoading(false);
             }
@@ -133,25 +163,29 @@ export default function AdminPOS() {
         loadInitialData();
     }, []);
 
-    const filteredItems = items.filter(item => {
-        const itemCatId = (item.category && typeof item.category === 'object') ? item.category._id : item.category;
-        const matchCat = selectedCategory === 'all' || itemCatId === selectedCategory;
-        const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
-        return matchCat && matchSearch;
-    });
+    const filteredItems = useMemo(() => {
+        return items.filter(item => {
+            const itemCatId = (item.category && typeof item.category === 'object') ? item.category._id : item.category;
+            const matchCat = selectedCategory === 'all' || itemCatId === selectedCategory;
+            const matchSearch = !search || 
+                item.name.toLowerCase().includes(search.toLowerCase()) ||
+                item.code === search;
+            return matchCat && matchSearch;
+        });
+    }, [items, selectedCategory, search]);
 
-    const addToCartPOS = (item) => {
+    const addToCartPOS = useCallback((item) => {
         setCart(prev => {
             const existing = prev.find(i => i._id === item._id);
             if (existing) return prev.map(i => i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i);
             return [...prev, { ...item, quantity: 1, specialInstructions: '' }];
         });
-    };
+    }, []);
 
-    const updateQty = (id, qty) => {
+    const updateQty = useCallback((id, qty) => {
         if (qty <= 0) { setCart(prev => prev.filter(i => i._id !== id)); return; }
         setCart(prev => prev.map(i => i._id === id ? { ...i, quantity: qty } : i));
-    };
+    }, []);
 
     const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
     const taxRate = settings?.taxPercentage || 0;
@@ -505,54 +539,28 @@ export default function AdminPOS() {
 
                 <div style={{
                     flex: 1, overflow: 'auto',
-                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(125px, 1fr))',
-                    gap: 'var(--space-xs)', alignContent: 'start',
-                    paddingRight: '4px'
+                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))',
+                    gap: 'var(--space-sm)', alignContent: 'start',
+                    paddingRight: '4px',
+                    paddingBottom: 'var(--space-xl)'
                 }}>
-                    {filteredItems.map(item => {
-                        const inCart = cart.find(i => i._id === item._id);
-                        return (
-                            <div key={item._id} onClick={() => addToCartPOS(item)}
-                                style={{
-                                    background: inCart ? 'rgba(249,115,22,0.1)' : 'var(--bg-card)',
-                                    border: `1px solid ${inCart ? 'var(--accent-primary)' : 'var(--border)'}`,
-                                    borderRadius: 'var(--radius-sm)',
-                                    padding: 'var(--space-sm)',
-                                    cursor: 'pointer',
-                                    transition: 'var(--transition-fast)',
-                                    position: 'relative',
-                                }}>
-                                {inCart && (
-                                    <span style={{
-                                        position: 'absolute', top: -6, right: -6, width: 22, height: 22,
-                                        borderRadius: '50%', background: 'var(--accent-primary)', color: 'white',
-                                        fontSize: '10px', fontWeight: 800,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        zIndex: 2,
-                                    }}>{inCart.quantity}</span>
-                                )}
-                                <div style={{ 
-                                    height: 100, borderRadius: 'var(--radius-sm)', marginBottom: 8, 
-                                    background: item.image ? `url(${item.image}) center/cover` : 'var(--bg-glass-light)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    overflow: 'hidden', border: '1px solid var(--border-light)',
-                                    position: 'relative'
-                                }}>
-                                    <span style={{
-                                        position: 'absolute', top: 4, left: 4, padding: '2px 4px',
-                                        background: 'rgba(0,0,0,0.6)', color: 'white', borderRadius: 4,
-                                        fontSize: 9, fontWeight: 800, zIndex: 1
-                                    }}>{item.code}</span>
-                                    {!item.image && <span style={{ fontSize: 32 }}>🍽️</span>}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                                    <span className={`veg-badge ${item.isVeg ? 'veg' : 'non-veg'}`} style={{ transform: 'scale(0.8)' }}></span>
-                                    <span style={{ fontSize: 'var(--font-xs)', fontWeight: 600, lineHeight: 1.2, flex: 1 }}>{item.name}</span>
-                                </div>
-                                <div style={{ fontWeight: 800, fontSize: 'var(--font-sm)', color: 'var(--accent-primary)' }}>₹{item.price}</div>
-                            </div>
-                        );
-                    })}
+                    {loading ? (
+                        <MenuSkeleton />
+                    ) : filteredItems.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-icon">🔍</div>
+                            <h3>No items found</h3>
+                        </div>
+                    ) : (
+                        filteredItems.map(item => (
+                            <MenuItemCard 
+                                key={item._id} 
+                                item={item} 
+                                inCart={cart.find(i => i._id === item._id)} 
+                                onAdd={addToCartPOS} 
+                            />
+                        ))
+                    )}
                 </div>
             </div>
 
