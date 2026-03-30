@@ -20,17 +20,27 @@ export default function MenuManagement() {
     const emptyItem = { name: '', code: '', category: '', price: '', tax: 5, description: '', image: '', isAvailable: true, isVeg: true, isBestseller: false, ingredients: '' };
     const [form, setForm] = useState(emptyItem);
     const [catForm, setCatForm] = useState({ name: '', description: '' });
+    
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(25);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchData = async () => {
-        const [cats, menuItems, settingsRes] = await Promise.all([
-            fetch('/api/categories').then(r => r.json()),
-            fetch('/api/menu?all=true').then(r => r.json()),
-            fetch('/api/settings').then(r => r.json()),
-        ]);
-        setCategories(cats || []);
-        setItems(menuItems || []);
-        setSettings(settingsRes || {});
-        setLoading(false);
+        try {
+            const res = await fetch('/api/admin/setup');
+            const data = await res.json();
+            
+            if (data.error) throw new Error(data.error);
+
+            setCategories(data.categories || []);
+            setItems(data.menu || []);
+            setSettings(data.settings || {});
+        } catch (err) {
+            addToast(err.message || 'Failed to load data', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => { fetchData(); }, []);
@@ -165,7 +175,12 @@ export default function MenuManagement() {
                     <h1>Menu Management</h1>
                     <p className="subtitle">{items.length} items across {categories.length} categories</p>
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', width: '250px' }}>
+                        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                        <input className="btn btn-secondary" style={{ paddingLeft: 35, width: '100%', fontSize: 'var(--font-xs)', textAlign: 'left' }} placeholder="Search code/name..." 
+                               value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
+                    </div>
                     <button onClick={() => setShowCatModal(true)} className="btn btn-secondary">+ Category</button>
                     <button onClick={() => { setEditing(null); setForm(emptyItem); setShowModal(true); }} className="btn btn-primary">
                         + Add Item
@@ -183,7 +198,7 @@ export default function MenuManagement() {
                 ))}
             </div>
 
-            {/* Items Table */}
+            {/* Items Table with Pagination Logic */}
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
                     <table className="data-table">
@@ -200,41 +215,76 @@ export default function MenuManagement() {
                             </tr>
                         </thead>
                         <tbody>
-                            {items.map(item => (
-                                <tr key={item._id}>
-                                    <td><span className="badge badge-secondary" style={{ fontWeight: 800 }}>{item.code || '-'}</span></td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-                                            {item.image && <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-sm)', background: `url(${item.image}) center/cover`, flexShrink: 0 }}></div>}
-                                            <div>
-                                                <div style={{ fontWeight: 600 }}>{item.name}</div>
-                                                {item.isBestseller && <span className="badge badge-warning" style={{ fontSize: '9px' }}>Bestseller</span>}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span className="badge badge-info">{item.category?.name || '-'}</span></td>
-                                    <td style={{ fontWeight: 700 }}>₹{item.price}</td>
-                                    <td>{item.tax}%</td>
-                                    <td><span className={`veg-badge ${item.isVeg ? 'veg' : 'non-veg'}`}></span></td>
-                                    <td>
-                                        <button onClick={() => toggleAvailability(item)}
-                                            className={`badge ${item.isAvailable ? 'badge-success' : 'badge-danger'}`}
-                                            style={{ cursor: 'pointer', border: 'none' }}>
-                                            {item.isAvailable ? 'Available' : 'Unavailable'}
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
-                                            <button onClick={() => {
-                                                setEditing(item);
-                                                setForm({ ...item, category: item.category?._id || '', ingredients: (item.ingredients || []).join(', ') });
-                                                setShowModal(true);
-                                            }} className="btn btn-ghost btn-sm">✏️</button>
-                                            <button onClick={() => handleDelete(item._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}>🗑️</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {(() => {
+                                const filtered = items.filter(i => 
+                                    i.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                    (i.code && i.code.includes(searchQuery))
+                                );
+                                const totalPages = Math.ceil(filtered.length / itemsPerPage);
+                                const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+                                return (
+                                    <>
+                                        {currentItems.map(item => (
+                                            <tr key={item._id}>
+                                                <td><span className="badge badge-secondary" style={{ fontWeight: 800 }}>{item.code || '-'}</span></td>
+                                                <td>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                                                        {item.image && <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-sm)', background: `url(${item.image}) center/cover`, flexShrink: 0 }}></div>}
+                                                        <div>
+                                                            <div style={{ fontWeight: 600 }}>{item.name}</div>
+                                                            {item.isBestseller && <span className="badge badge-warning" style={{ fontSize: '9px' }}>Bestseller</span>}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><span className="badge badge-info">{item.category?.name || '-'}</span></td>
+                                                <td style={{ fontWeight: 700 }}>₹{item.price}</td>
+                                                <td>{item.tax}%</td>
+                                                <td><span className={`veg-badge ${item.isVeg ? 'veg' : 'non-veg'}`}></span></td>
+                                                <td>
+                                                    <button onClick={() => toggleAvailability(item)}
+                                                        className={`badge ${item.isAvailable ? 'badge-success' : 'badge-danger'}`}
+                                                        style={{ cursor: 'pointer', border: 'none' }}>
+                                                        {item.isAvailable ? 'Available' : 'Unavailable'}
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                                                        <button onClick={() => {
+                                                            setEditing(item);
+                                                            setForm({ ...item, category: item.category?._id || '', ingredients: (item.ingredients || []).join(', ') });
+                                                            setShowModal(true);
+                                                        }} className="btn btn-ghost btn-sm">✏️</button>
+                                                        <button onClick={() => handleDelete(item._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}>🗑️</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+
+                                        {/* Pagination Footer in Table */}
+                                        {totalPages > 1 && (
+                                            <tr>
+                                                <td colSpan="8" style={{ padding: 'var(--space-md)', background: 'rgba(255,255,255,0.02)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>
+                                                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} items
+                                                        </span>
+                                                        <div style={{ display: 'flex', gap: 8 }}>
+                                                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="btn btn-secondary btn-sm" disabled={currentPage === 1}>Previous</button>
+                                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                                {Array.from({ length: totalPages }).map((_, i) => (
+                                                                    <button key={i} onClick={() => setCurrentPage(i + 1)} className={`btn btn-sm ${currentPage === i + 1 ? 'btn-primary' : 'btn-secondary text-muted'}`} style={{ minWidth: 28 }}>{i + 1}</button>
+                                                                ))}
+                                                            </div>
+                                                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="btn btn-secondary btn-sm" disabled={currentPage === totalPages}>Next</button>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </tbody>
                     </table>
                 </div>

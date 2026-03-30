@@ -20,10 +20,10 @@ export default function SettingsPage() {
     const { addToast } = useToast();
 
     useEffect(() => {
-        fetch('/api/settings')
+        fetch('/api/admin/setup')
             .then(r => r.json())
             .then(data => {
-                setSettings(data);
+                if (data.settings) setSettings(data.settings);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
