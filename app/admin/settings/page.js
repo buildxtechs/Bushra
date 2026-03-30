@@ -50,8 +50,6 @@ export default function SettingsPage() {
         }
     };
 
-    if (loading) return <LoadingAnimation />;
-
     return (
         <div className="animate-fadeIn">
             <div className="page-header">
