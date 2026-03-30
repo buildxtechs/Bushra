@@ -2,61 +2,44 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { uploadImage } from "@/lib/cloudinary";
 
-export async function GET(req) {
+export async function GET() {
     try {
-        const { searchParams } = new URL(req.url);
-        const includeStats = searchParams.get('stats') === 'true';
-
-        // Concurrently fetch menu items and categories
-        const [menuItems, categories] = await Promise.all([
-            db.read('menuitems'),
-            db.read('categories')
+        // Optimize: Calculate sales counts using MongoDB aggregation (much faster for large datasets)
+        const salesStats = await db.aggregate('orders', [
+            {
+                $match: {
+                    $or: [
+                        { status: { $in: ['completed', 'paid', 'served', 'delivered'] } },
+                        { paymentStatus: 'paid' }
+                    ]
+                }
+            },
+            { $unwind: '$items' },
+            {
+                $group: {
+                    _id: { $ifNull: ['$items.item', '$items.menuItem'] },
+                    totalSales: { $sum: '$items.quantity' }
+                }
+            }
         ]);
 
-        let salesCount = {};
-        if (includeStats) {
-            // Only aggregate if explicitly requested (heavy operation)
-            const salesStats = await db.aggregate('orders', [
-                {
-                    $match: {
-                        $or: [
-                            { status: { $in: ['completed', 'paid', 'served', 'delivered'] } },
-                            { paymentStatus: 'paid' }
-                        ]
-                    }
-                },
-                { $unwind: '$items' },
-                {
-                    $group: {
-                        _id: { $ifNull: ['$items.item', '$items.menuItem'] },
-                        totalSales: { $sum: '$items.quantity' }
-                    }
-                }
-            ]);
+        const salesCount = {};
+        salesStats.forEach(stat => {
+            if (stat._id) salesCount[String(stat._id)] = stat.totalSales;
+        });
 
-            salesStats.forEach(stat => {
-                if (stat._id) salesCount[String(stat._id)] = stat.totalSales;
-            });
-        }
+        const menuItems = await db.read('menuitems');
+        const categories = await db.read('categories');
 
-        // Efficiently map categories and stats
-        const categoryMap = categories.reduce((acc, cat) => {
-            acc[String(cat._id)] = cat;
-            return acc;
-        }, {});
-
+        // Manual population and adding salesCount
         const populatedMenu = menuItems.map(item => ({
             ...item,
             salesCount: salesCount[String(item._id)] || 0,
-            category: categoryMap[String(item.category)] || item.category
+            category: categories.find(c => String(c._id) === String(item.category)) || item.category
         }));
 
-        // Sort by salesCount if stats are included, otherwise by name/code
-        if (includeStats) {
-            populatedMenu.sort((a, b) => b.salesCount - a.salesCount);
-        } else {
-            populatedMenu.sort((a, b) => (a.code || '').localeCompare(b.code || '') || a.name.localeCompare(b.name));
-        }
+        // Sort by salesCount (descending)
+        populatedMenu.sort((a, b) => b.salesCount - a.salesCount);
 
         return NextResponse.json(populatedMenu);
     } catch (error) {

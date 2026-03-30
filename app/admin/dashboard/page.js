@@ -1,9 +1,9 @@
 'use client';
+import LoadingAnimation from '@/components/LoadingAnimation';
 import { useState, useEffect, useMemo } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { useToast } from '@/components/Toast';
-import { SkeletonCard, SkeletonTable, Shimmer } from '@/components/Skeleton';
 
 export default function AdminDashboard() {
     const [report, setReport] = useState(null);
@@ -67,31 +67,7 @@ export default function AdminDashboard() {
         addToast('Exported CSV successfully', 'success');
     };
 
-    if (loading && !report) {
-        return (
-            <div className="animate-fadeIn">
-                <Shimmer />
-                <div className="page-header">
-                    <div style={{ width: '300px' }}><SkeletonCard height="40px" /></div>
-                    <div style={{ width: '400px' }}><SkeletonCard height="40px" /></div>
-                </div>
-                <div className="grid grid-4" style={{ marginBottom: '20px' }}>
-                    <SkeletonCard height="80px" />
-                    <SkeletonCard height="80px" />
-                    <SkeletonCard height="80px" />
-                    <SkeletonCard height="80px" />
-                </div>
-                <div className="grid grid-3">
-                    <SkeletonCard height="150px" />
-                    <SkeletonCard height="150px" />
-                    <SkeletonCard height="150px" />
-                </div>
-                <div style={{ marginTop: '30px' }}>
-                    <SkeletonCard height="300px" />
-                </div>
-            </div>
-        );
-    }
+    if (loading && !report) return <LoadingAnimation />;
 
     const starItem = report?.topItems?.[0];
 

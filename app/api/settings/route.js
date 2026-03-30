@@ -18,14 +18,10 @@ export async function GET() {
 
 export async function POST(req) {
     try {
-        const body = await req.json();
-        // Strictly sanitize data by removing all metadata fields
-        const { _id, __v, createdAt, updatedAt, ...data } = body;
-        
+        const { _id, __v, ...data } = await req.json();
         const existing = await db.findOne('settings', {});
         
         if (existing) {
-            // Use update many to apply the set
             await db.update('settings', { _id: existing._id }, data);
             const updated = await db.findById('settings', existing._id);
             return NextResponse.json(updated);
@@ -34,7 +30,6 @@ export async function POST(req) {
             return NextResponse.json(newSettings);
         }
     } catch (error) {
-        console.error('Settings save error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

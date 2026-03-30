@@ -1,40 +1,40 @@
 'use client';
+import LoadingAnimation from '@/components/LoadingAnimation';
 import { useState, useEffect } from 'react';
 import Modal from '@/components/Modal';
 import { useToast } from '@/components/Toast';
 import { formatDate } from '@/lib/utils';
-import { useAdmin } from '@/lib/contexts/AdminContext';
-import { SkeletonTable, Shimmer } from '@/components/Skeleton';
 
 export default function InventoryPage() {
-    const { inventory: items, suppliers, settings: rawSettings, loading, refreshData } = useAdmin();
-    
+    const [items, setItems] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [showSupplierModal, setShowSupplierModal] = useState(false);
     const [editing, setEditing] = useState(null);
+    const [loading, setLoading] = useState(true);
     const { addToast } = useToast();
 
     const emptyItem = { name: '', quantity: '', unit: 'kg', minStockLevel: 10, costPerUnit: '', supplier: '' };
     const [form, setForm] = useState(emptyItem);
     const [supplierForm, setSupplierForm] = useState({ name: '', contact: '', email: '', phone: '', address: '' });
-    
-    const [parcelPrices, setParcelPrices] = useState({ 
-        containerPrice: rawSettings?.containerPrice || 0, 
-        gravyPrice: rawSettings?.gravyPrice || 0 
-    });
+    const [parcelPrices, setParcelPrices] = useState({ containerPrice: 0, gravyPrice: 0 });
     const [savingPrices, setSavingPrices] = useState(false);
+    const [rawSettings, setRawSettings] = useState(null);
 
-    // Update local parcel prices when settings load
-    useEffect(() => {
-        if (rawSettings) {
-            setParcelPrices({ 
-                containerPrice: rawSettings.containerPrice || 0, 
-                gravyPrice: rawSettings.gravyPrice || 0 
-            });
-        }
-    }, [rawSettings]);
+    const fetchData = async () => {
+        const [inv, sups, sets] = await Promise.all([
+            fetch('/api/inventory').then(r => r.json()),
+            fetch('/api/suppliers').then(r => r.json()),
+            fetch('/api/settings').then(r => r.json()),
+        ]);
+        setItems(inv || []); 
+        setSuppliers(sups || []); 
+        setRawSettings(sets);
+        if (sets) setParcelPrices({ containerPrice: sets.containerPrice || 0, gravyPrice: sets.gravyPrice || 0 });
+        setLoading(false);
+    };
 
-    const fetchData = () => refreshData(true); // Silent background refresh
+    useEffect(() => { fetchData(); }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -101,7 +101,7 @@ export default function InventoryPage() {
     };
 
     const lowStock = items.filter(i => i.quantity <= i.minStockLevel);
-    if (loading && items.length === 0) return <SkeletonTable rows={10} cols={8} />;
+    if (loading) return <LoadingAnimation />;
 
     return (
         <div className="animate-fadeIn">

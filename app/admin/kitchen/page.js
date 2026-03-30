@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { formatDateTime } from '@/lib/utils';
-import { SkeletonCard, Shimmer } from '@/components/Skeleton';
 
 export default function KitchenDisplay() {
     const [orders, setOrders] = useState([]);
@@ -48,11 +47,8 @@ export default function KitchenDisplay() {
                         New Orders ({placedOrders.length})
                     </h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                        {orders.length === 0 && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <SkeletonCard height="150px" />
-                                <SkeletonCard height="150px" />
-                            </div>
+                        {placedOrders.length === 0 && (
+                            <div className="empty-state"><p style={{ color: 'var(--text-muted)' }}>No new orders</p></div>
                         )}
                         {placedOrders.map(order => (
                             <div key={order._id} className="card animate-bounceIn" style={{ borderLeft: '4px solid var(--warning)' }}>
