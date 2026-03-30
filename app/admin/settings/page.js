@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import { SkeletonInput } from '@/components/Skeleton';
 import { useToast } from '@/components/Toast';
 
 export default function SettingsPage() {
@@ -86,32 +86,45 @@ export default function SettingsPage() {
                                 }} style={{ flex: 1, fontSize: 'var(--font-xs)' }} />
                             </div>
                         </div>
-                        <div className="input-group">
-                            <label>Restaurant Name</label>
-                            <input 
-                                value={settings.restaurantName}
-                                onChange={e => setSettings({...settings, restaurantName: e.target.value})}
-                                placeholder="Enter restaurant name..."
-                            />
-                        </div>
-                        <div className="grid grid-2">
-                             <div className="input-group">
-                                <label>Phone Number</label>
-                                <input 
-                                    value={settings.phone}
-                                    onChange={e => setSettings({...settings, phone: e.target.value})}
-                                    placeholder="+91..."
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>GSTIN</label>
-                                <input 
-                                    value={settings.gstin}
-                                    onChange={e => setSettings({...settings, gstin: e.target.value})}
-                                    placeholder="27AA..."
-                                />
-                            </div>
-                        </div>
+                        {loading ? (
+                            <>
+                                <SkeletonInput />
+                                <SkeletonInput />
+                                <div className="grid grid-2">
+                                    <SkeletonInput />
+                                    <SkeletonInput />
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="input-group">
+                                    <label>Restaurant Name</label>
+                                    <input 
+                                        value={settings.restaurantName}
+                                        onChange={e => setSettings({...settings, restaurantName: e.target.value})}
+                                        placeholder="Enter restaurant name..."
+                                    />
+                                </div>
+                                <div className="grid grid-2">
+                                     <div className="input-group">
+                                        <label>Phone Number</label>
+                                        <input 
+                                            value={settings.phone}
+                                            onChange={e => setSettings({...settings, phone: e.target.value})}
+                                            placeholder="+91..."
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label>GSTIN</label>
+                                        <input 
+                                            value={settings.gstin}
+                                            onChange={e => setSettings({...settings, gstin: e.target.value})}
+                                            placeholder="27AA..."
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
                         <div className="mt-md">
                             <button type="submit" className="btn btn-primary" disabled={saving}>
                                 {saving ? 'Saving...' : 'Save Info'}
@@ -121,25 +134,34 @@ export default function SettingsPage() {
 
                     <h3 style={{ margin: 'var(--space-xl) 0 var(--space-md) 0' }}>📜 Bill Design</h3>
                     <form onSubmit={handleSave} className="flex-col gap-md">
-                        <div className="input-group">
-                            <label>Bill Header Text</label>
-                            <textarea 
-                                value={settings.billHeader}
-                                onChange={e => setSettings({...settings, billHeader: e.target.value})}
-                                placeholder="Enter address and additional contact info..."
-                                style={{ minHeight: 80 }}
-                            />
-                            <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>This appears at the top under the restaurant name.</p>
-                        </div>
-                        <div className="input-group">
-                            <label>Bill Footer Text</label>
-                            <textarea 
-                                value={settings.billFooter}
-                                onChange={e => setSettings({...settings, billFooter: e.target.value})}
-                                placeholder="Enter thank you message..."
-                                style={{ minHeight: 60 }}
-                            />
-                        </div>
+                        {loading ? (
+                            <>
+                                <SkeletonInput />
+                                <SkeletonInput />
+                            </>
+                        ) : (
+                            <>
+                                <div className="input-group">
+                                    <label>Bill Header Text</label>
+                                    <textarea 
+                                        value={settings.billHeader}
+                                        onChange={e => setSettings({...settings, billHeader: e.target.value})}
+                                        placeholder="Enter address and additional contact info..."
+                                        style={{ minHeight: 80 }}
+                                    />
+                                    <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>This appears at the top under the restaurant name.</p>
+                                </div>
+                                <div className="input-group">
+                                    <label>Bill Footer Text</label>
+                                    <textarea 
+                                        value={settings.billFooter}
+                                        onChange={e => setSettings({...settings, billFooter: e.target.value})}
+                                        placeholder="Enter thank you message..."
+                                        style={{ minHeight: 60 }}
+                                    />
+                                </div>
+                            </>
+                        )}
                         <div className="mt-md">
                             <button type="submit" className="btn btn-primary" disabled={saving}>
                                 {saving ? 'Saving...' : 'Save Bill Design'}

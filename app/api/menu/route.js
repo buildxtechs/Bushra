@@ -30,12 +30,13 @@ export async function GET() {
 
         const menuItems = await db.read('menuitems');
         const categories = await db.read('categories');
+        const categoryMap = new Map(categories.map(c => [String(c._id), c]));
 
         // Manual population and adding salesCount
         const populatedMenu = menuItems.map(item => ({
             ...item,
             salesCount: salesCount[String(item._id)] || 0,
-            category: categories.find(c => String(c._id) === String(item.category)) || item.category
+            category: categoryMap.get(String(item.category)) || item.category
         }));
 
         // Sort by salesCount (descending)
