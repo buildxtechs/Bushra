@@ -444,25 +444,37 @@ export default function AdminPOS() {
 
                 <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm)' }}>
                     {cart.length === 0 ? <p style={{ textAlign: 'center', marginTop: 40, color: 'var(--text-muted)' }}>Cart is empty</p> : cart.map(item => (
-                        <div key={item._id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                            <div style={{ flex: 1 }}><div style={{ fontSize: 'var(--font-xs)', fontWeight: 600 }}>{item.name}</div></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <button onClick={() => updateQty(item._id, item.quantity - 1)}>-</button>
-                                <span>{item.quantity}</span>
-                                <button onClick={() => updateQty(item._id, item.quantity + 1)}>+</button>
+                        <div key={item._id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 'var(--font-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>{item.name}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>₹{item.price} per unit</div>
                             </div>
-                            <div style={{ fontWeight: 700, minWidth: 50, textAlign: 'right' }}>₹{(item.price * item.quantity).toFixed(0)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <button className="btn btn-secondary btn-sm" style={{ padding: '2px 8px', minWidth: 28 }} onClick={() => updateQty(item._id, item.quantity - 1)}>-</button>
+                                <span style={{ fontWeight: 800, fontSize: 'var(--font-sm)', minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
+                                <button className="btn btn-secondary btn-sm" style={{ padding: '2px 8px', minWidth: 28 }} onClick={() => updateQty(item._id, item.quantity + 1)}>+</button>
+                            </div>
+                            <div style={{ fontWeight: 800, minWidth: 60, textAlign: 'right', fontSize: 'var(--font-sm)', color: 'var(--accent-primary)' }}>₹{(item.price * item.quantity).toFixed(0)}</div>
                         </div>
                     ))}
                 </div>
 
                 <div style={{ borderTop: '1px solid var(--border)', padding: 'var(--space-md)' }}>
-                    <div style={{ fontSize: 'var(--font-xs)', marginBottom: 8 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
-                        {tax > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Tax</span><span>₹{tax.toFixed(2)}</span></div>}
-                        {totalParcelCharges > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Parcel</span><span>₹{totalParcelCharges.toFixed(2)}</span></div>}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span>Discount</span><input type="number" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)} style={{ width: 60, textAlign: 'right' }} /></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 'var(--font-lg)', borderTop: '1px solid var(--border)', marginTop: 8, pt: 8 }}><span>Total</span><span>₹{total.toFixed(2)}</span></div>
+                    <div style={{ fontSize: 'var(--font-sm)', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Subtotal</span><span style={{ fontWeight: 600 }}>₹{subtotal.toFixed(2)}</span></div>
+                        {tax > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Tax</span><span style={{ fontWeight: 600 }}>₹{tax.toFixed(2)}</span></div>}
+                        {totalParcelCharges > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Parcel Charges</span><span style={{ fontWeight: 600 }}>₹{totalParcelCharges.toFixed(2)}</span></div>}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                            <span>Discount</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>₹</span>
+                                <input type="number" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)} style={{ width: 70, textAlign: 'right', padding: '4px 8px', fontSize: 'var(--font-xs)', border: '1px solid var(--border)', borderRadius: '4px' }} />
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: 'var(--font-xl)', borderTop: '2px solid var(--border)', marginTop: 12, paddingTop: 12, color: 'var(--accent-primary)' }}>
+                            <span>TOTAL</span>
+                            <span>₹{total.toFixed(2)}</span>
+                        </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                         <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setCart([])}>Clear</button>
@@ -480,10 +492,28 @@ export default function AdminPOS() {
                             <p>{cart.length} items in cart</p>
                         </div>
                         <p style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, marginBottom: 10 }}>SELECT PAYMENT METHOD</p>
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            {['cash', 'card', 'upi'].map(m => (
-                                <button key={m} onClick={() => { setPaymentMethod(m); placeOrder(m); }} className="card" style={{ flex: 1, padding: 20, textAlign: 'center', textTransform: 'capitalize' }}>
-                                    {m === 'cash' ? '💵' : m === 'card' ? '💳' : '📱'} {m}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                            {[
+                                { id: 'cash', label: 'Cash', icon: '💵', color: '#22c55e' },
+                                { id: 'card', label: 'Card', icon: '💳', color: '#3b82f6' },
+                                { id: 'upi', label: 'UPI', icon: '📱', color: '#a855f7' }
+                            ].map(m => (
+                                <button key={m.id} 
+                                    onClick={() => { setPaymentMethod(m.id); placeOrder(m.id); }} 
+                                    className="payment-mode-btn"
+                                    style={{ 
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                                        padding: '24px 12px', borderRadius: 'var(--radius-md)',
+                                        border: `2px solid ${m.color}20`, background: `${m.color}05`,
+                                        cursor: 'pointer', transition: '0.3s',
+                                        color: 'var(--text-primary)', fontWeight: 800, fontSize: 'var(--font-sm)'
+                                    }}>
+                                    <span style={{ fontSize: 32 }}>{m.icon}</span>
+                                    {m.label.toUpperCase()}
+                                    <style jsx>{`
+                                        .payment-mode-btn:hover { background: ${m.color}15; border-color: ${m.color}; transform: translateY(-4px); box-shadow: 0 10px 20px -5px ${m.color}30; }
+                                        .payment-mode-btn:active { transform: scale(0.95); }
+                                    `}</style>
                                 </button>
                             ))}
                         </div>
