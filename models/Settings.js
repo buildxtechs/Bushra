@@ -7,6 +7,7 @@ const SettingsSchema = new mongoose.Schema({
   address: { type: String },
   billHeader: { type: String },
   billFooter: { type: String },
+  tagline: { type: String, default: 'Halal Certified | Premium Dining' },
   gstin: { type: String },
   taxPercentage: { type: Number, default: 5 },
   currency: { type: String, default: 'INR' },

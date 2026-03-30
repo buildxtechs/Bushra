@@ -2,44 +2,68 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { uploadImage } from "@/lib/cloudinary";
 
-export async function GET() {
+export async function GET(req) {
     try {
-        // Optimize: Calculate sales counts using MongoDB aggregation (much faster for large datasets)
-        const salesStats = await db.aggregate('orders', [
-            {
-                $match: {
-                    $or: [
-                        { status: { $in: ['completed', 'paid', 'served', 'delivered'] } },
-                        { paymentStatus: 'paid' }
-                    ]
+        const { searchParams } = new URL(req.url);
+        const minimal = searchParams.get('minimal') === 'true';
+        const search = searchParams.get('search') || '';
+        const categoryId = searchParams.get('category') || '';
+        
+        let salesCount = {};
+        
+        // Skip expensive aggregation for administrative lists unless requested
+        if (!minimal) {
+            const salesStats = await db.aggregate('orders', [
+                {
+                    $match: {
+                        $or: [
+                            { status: { $in: ['completed', 'paid', 'served', 'delivered'] } },
+                            { paymentStatus: 'paid' }
+                        ]
+                    }
+                },
+                { $unwind: '$items' },
+                {
+                    $group: {
+                        _id: { $ifNull: ['$items.item', '$items.menuItem'] },
+                        totalSales: { $sum: '$items.quantity' }
+                    }
                 }
-            },
-            { $unwind: '$items' },
-            {
-                $group: {
-                    _id: { $ifNull: ['$items.item', '$items.menuItem'] },
-                    totalSales: { $sum: '$items.quantity' }
-                }
-            }
-        ]);
+            ]);
 
-        const salesCount = {};
-        salesStats.forEach(stat => {
-            if (stat._id) salesCount[String(stat._id)] = stat.totalSales;
-        });
+            salesStats.forEach(stat => {
+                if (stat._id) salesCount[String(stat._id)] = stat.totalSales;
+            });
+        }
 
-        const menuItems = await db.read('menuitems');
+        const query = {};
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { code: { $regex: search, $options: 'i' } }
+            ];
+        }
+        if (categoryId) query.category = categoryId;
+
+        const menuItems = await db.find('menuitems', query);
         const categories = await db.read('categories');
 
         // Manual population and adding salesCount
         const populatedMenu = menuItems.map(item => ({
             ...item,
-            salesCount: salesCount[String(item._id)] || 0,
-            category: categories.find(c => String(c._id) === String(item.category)) || item.category
+            // Only include salesCount if not in minimal mode
+            salesCount: !minimal ? (salesCount[String(item._id)] || 0) : undefined,
+            category: categories.find(c => String(c._id) === String(item.category)) || item.category,
+            // Optimization: If minimal, we could omit the full image here if it's too big
+            // image: minimal ? undefined : item.image 
         }));
 
-        // Sort by salesCount (descending)
-        populatedMenu.sort((a, b) => b.salesCount - a.salesCount);
+        // Sort by salesCount if available, otherwise by name
+        if (!minimal) {
+            populatedMenu.sort((a, b) => b.salesCount - a.salesCount);
+        } else {
+            populatedMenu.sort((a, b) => a.name.localeCompare(b.name));
+        }
 
         return NextResponse.json(populatedMenu);
     } catch (error) {

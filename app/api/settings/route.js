@@ -19,6 +19,19 @@ export async function GET() {
 export async function POST(req) {
     try {
         const data = await req.json();
+        
+        // Handle logo upload if it's a data URI
+        if (data.logoUrl && data.logoUrl.startsWith('data:image')) {
+            try {
+                const { uploadImage } = await import("@/lib/cloudinary");
+                const uploadResult = await uploadImage(data.logoUrl, 'branding');
+                data.logoUrl = uploadResult.url;
+            } catch (err) {
+                console.error('Logo upload error:', err);
+                // Continue without failing, maybe error message?
+            }
+        }
+
         const existing = await db.findOne('settings', {});
         
         if (existing) {

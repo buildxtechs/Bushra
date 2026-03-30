@@ -14,6 +14,9 @@ export default function MenuManagement() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState(null);
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [itemsPerPage] = useState(50);
     const { addToast } = useToast();
     const { confirm } = useConfirm();
 
@@ -22,9 +25,10 @@ export default function MenuManagement() {
     const [catForm, setCatForm] = useState({ name: '', description: '' });
 
     const fetchData = async () => {
+        setLoading(true);
         const [cats, menuItems, settingsRes] = await Promise.all([
             fetch('/api/categories').then(r => r.json()),
-            fetch('/api/menu?all=true').then(r => r.json()),
+            fetch(`/api/menu?minimal=true&search=${encodeURIComponent(search)}`).then(r => r.json()),
             fetch('/api/settings').then(r => r.json()),
         ]);
         setCategories(cats || []);
@@ -33,7 +37,12 @@ export default function MenuManagement() {
         setLoading(false);
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { 
+        const delayDebounceFn = setTimeout(() => {
+            fetchData();
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [search]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -200,8 +209,23 @@ export default function MenuManagement() {
                 ))}
             </div>
 
+            {/* Search and Filters */}
+            <div className="card" style={{ marginBottom: 'var(--space-md)', padding: 'var(--space-sm)' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                        <input 
+                            value={search} 
+                            onChange={e => setSearch(e.target.value)} 
+                            placeholder="Search by name or 3-digit code..." 
+                            style={{ paddingLeft: 40, width: '100%' }}
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* Items Table */}
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="card" style={{ padding: 0, overflow: 'hidden', opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
                 <div style={{ overflowX: 'auto' }}>
                     <table className="data-table">
                         <thead>
@@ -217,6 +241,13 @@ export default function MenuManagement() {
                             </tr>
                         </thead>
                         <tbody>
+                            {items.length === 0 && !loading && (
+                                <tr>
+                                    <td colSpan={8} style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-secondary)' }}>
+                                        No items found matching your search.
+                                    </td>
+                                </tr>
+                            )}
                             {items.map(item => (
                                 <tr key={item._id}>
                                     <td><span className="badge badge-secondary" style={{ fontWeight: 800 }}>{item.code || '-'}</span></td>

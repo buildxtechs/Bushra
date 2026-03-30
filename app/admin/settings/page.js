@@ -2,32 +2,40 @@
 import { useState, useEffect } from 'react';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useToast } from '@/components/Toast';
+import { db } from '@/lib/offline-db';
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState({
+        restaurantName: '',
+        tagline: '',
+        phone: '',
+        address: '',
         billHeader: '',
         billFooter: '',
-        taxPercentage: 0,
-        gstin: '',
-        phone: '',
-        restaurantName: '',
-        logoUrl: ''
+        logoUrl: '',
+        taxPercentage: 5,
+        currency: '₹'
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const { addToast } = useToast();
 
     useEffect(() => {
-        fetch('/api/settings')
-            .then(r => r.json())
-            .then(data => {
-                setSettings(data);
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data) setSettings({ ...settings, ...data });
+            } catch (err) {
+                addToast('Failed to load settings', 'error');
+            } finally {
                 setLoading(false);
-            })
-            .catch(() => setLoading(false));
+            }
+        };
+        fetchSettings();
     }, []);
 
-    const handleSave = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
@@ -37,15 +45,30 @@ export default function SettingsPage() {
                 body: JSON.stringify(settings)
             });
             if (res.ok) {
-                addToast('Settings saved successfully', 'success');
+                addToast('Settings updated successfully', 'success');
+                // Sync with local cache for POS
+                const updated = await res.json();
+                setSettings(updated);
             } else {
-                addToast('Failed to save settings', 'error');
+                throw new Error('Failed to save settings');
             }
-        } catch (error) {
-            addToast('An error occurred', 'error');
+        } catch (err) {
+            addToast(err.message, 'error');
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleLogoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            setSettings({ ...settings, logoUrl: reader.result });
+            addToast('Logo attached! Save to finalize.', 'info');
+        };
     };
 
     if (loading) return <LoadingAnimation />;
@@ -54,159 +77,140 @@ export default function SettingsPage() {
         <div className="animate-fadeIn">
             <div className="page-header">
                 <div>
-                    <h1>Settings</h1>
-                    <p className="subtitle">Configure system-wide restaurant settings</p>
+                    <h1>System Settings</h1>
+                    <p className="subtitle">Manage restaurant branding and bill configuration</p>
                 </div>
             </div>
 
-            <div className="grid grid-2">
+            <form onSubmit={handleSubmit} className="grid grid-2" style={{ gap: 'var(--space-lg)' }}>
+                {/* Branding Section */}
                 <div className="card">
-                    <h3 style={{ marginBottom: 'var(--space-md)' }}>🍽️ Restaurant Info</h3>
-                    <form onSubmit={handleSave} className="flex-col gap-md">
-                        <div className="input-group">
-                            <label>Logo Preview</label>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-                                {settings.logoUrl ? (
-                                    <img src={settings.logoUrl} alt="Logo" style={{ height: 60, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
-                                ) : (
-                                    <div style={{ height: 60, width: 60, background: 'var(--bg-glass-light)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🥣</div>
-                                )}
-                                <input type="file" accept="image/*" onChange={async (e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.readAsDataURL(file);
-                                        reader.onload = () => {
-                                            setSettings({ ...settings, logoUrl: reader.result });
-                                            addToast('Logo attached!', 'success');
-                                        };
-                                    }
-                                }} style={{ flex: 1, fontSize: 'var(--font-xs)' }} />
-                            </div>
-                        </div>
+                    <h3 style={{ marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        🏢 Restaurant Branding
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
                         <div className="input-group">
                             <label>Restaurant Name</label>
                             <input 
-                                value={settings.restaurantName}
-                                onChange={e => setSettings({...settings, restaurantName: e.target.value})}
-                                placeholder="Enter restaurant name..."
+                                value={settings.restaurantName} 
+                                onChange={e => setSettings({ ...settings, restaurantName: e.target.value })}
+                                placeholder="e.g. BUSHRA FAMILY RESTAURANT"
+                                required
                             />
                         </div>
-                        <div className="grid grid-2">
-                             <div className="input-group">
-                                <label>Phone Number</label>
-                                <input 
-                                    value={settings.phone}
-                                    onChange={e => setSettings({...settings, phone: e.target.value})}
-                                    placeholder="+91..."
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>GSTIN</label>
-                                <input 
-                                    value={settings.gstin}
-                                    onChange={e => setSettings({...settings, gstin: e.target.value})}
-                                    placeholder="27AA..."
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-md">
-                            <button type="submit" className="btn btn-primary" disabled={saving}>
-                                {saving ? 'Saving...' : 'Save Info'}
-                            </button>
-                        </div>
-                    </form>
-
-                    <h3 style={{ margin: 'var(--space-xl) 0 var(--space-md) 0' }}>📜 Bill Design</h3>
-                    <form onSubmit={handleSave} className="flex-col gap-md">
                         <div className="input-group">
-                            <label>Bill Header Text</label>
-                            <textarea 
-                                value={settings.billHeader}
-                                onChange={e => setSettings({...settings, billHeader: e.target.value})}
-                                placeholder="Enter address and additional contact info..."
-                                style={{ minHeight: 80 }}
-                            />
-                            <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>This appears at the top under the restaurant name.</p>
-                        </div>
-                        <div className="input-group">
-                            <label>Bill Footer Text</label>
-                            <textarea 
-                                value={settings.billFooter}
-                                onChange={e => setSettings({...settings, billFooter: e.target.value})}
-                                placeholder="Enter thank you message..."
-                                style={{ minHeight: 60 }}
+                            <label>Tagline / HALAL Info</label>
+                            <input 
+                                value={settings.tagline} 
+                                onChange={e => setSettings({ ...settings, tagline: e.target.value })}
+                                placeholder="e.g. ⭐ Halal Certified | Premium Dining ⭐"
                             />
                         </div>
-                        <div className="mt-md">
-                            <button type="submit" className="btn btn-primary" disabled={saving}>
-                                {saving ? 'Saving...' : 'Save Bill Design'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <div className="card">
-                    <h3 style={{ marginBottom: 'var(--space-md)' }}>💸 Tax Configuration</h3>
-                    <form onSubmit={handleSave} className="flex-col gap-md">
                         <div className="input-group">
-                            <label>Global Sales Tax (%)</label>
-                            <div className="flex items-center gap-sm">
-                                <input 
-                                    type="number" 
-                                    step="0.01"
-                                    value={settings.taxPercentage}
-                                    onChange={e => setSettings({...settings, taxPercentage: parseFloat(e.target.value) || 0})}
-                                    placeholder="0.00"
-                                    style={{ flex: 1 }}
-                                />
-                                <span style={{ fontWeight: 700 }}>%</span>
+                            <label>Restaurant Logo</label>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                                {settings.logoUrl && (
+                                    <div style={{ 
+                                        width: 80, height: 80, 
+                                        borderRadius: 'var(--radius-md)', 
+                                        border: '1px solid var(--border)',
+                                        background: `url(${settings.logoUrl}) center/contain no-repeat`,
+                                        backgroundColor: '#fff'
+                                    }}></div>
+                                )}
+                                <div style={{ flex: 1 }}>
+                                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} id="logo-upload" />
+                                    <label htmlFor="logo-upload" className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                                        {settings.logoUrl ? 'Change Logo' : 'Upload Logo'}
+                                    </label>
+                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: 4 }}>
+                                        Recommended: PNG with transparent background
+                                    </p>
+                                </div>
                             </div>
-                            <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>Applied to all orders unless item-specific tax is set.</p>
-                        </div>
-                        <div className="mt-md">
-                            <button type="submit" className="btn btn-primary" disabled={saving}>
-                                {saving ? 'Saving...' : 'Update Tax Rate'}
-                            </button>
-                        </div>
-                    </form>
-
-                    <div className="mt-xl" style={{ 
-                        background: 'rgba(255,255,255,0.01)', 
-                        padding: 'var(--space-lg)', 
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--border)'
-                    }}>
-                        <h4 style={{ fontSize: 'var(--font-xs)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 'var(--space-md)', color: 'var(--text-muted)' }}>Receipt Preview</h4>
-                        <div style={{ 
-                            background: 'white', 
-                            color: 'black', 
-                            padding: 'var(--space-md)', 
-                            fontFamily: 'monospace', 
-                            fontSize: '11px',
-                            textAlign: 'center',
-                            whiteSpace: 'pre-wrap',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-                        }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{settings.restaurantName || 'RESTAURANT NAME'}</div>
-                            {settings.billHeader}
-                            {settings.phone && <div>PH: {settings.phone}</div>}
-                            {settings.gstin && <div>GST: {settings.gstin}</div>}
-                            <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px dashed #ccc' }} />
-                            <div style={{ textAlign: 'left' }}>
-                                ITEM 1           ₹100.00<br/>
-                                ITEM 2           ₹200.00<br/>
-                                <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #eee' }} />
-                                SUB-TOTAL        ₹300.00<br/>
-                                GST ({settings.taxPercentage}%)      ₹{(300 * settings.taxPercentage / 100).toFixed(2)}<br/>
-                                <strong>TOTAL            ₹{(300 * (1 + settings.taxPercentage / 100)).toFixed(2)}</strong>
-                            </div>
-                            <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px dashed #ccc' }} />
-                            {settings.billFooter}
                         </div>
                     </div>
                 </div>
-            </div>
+
+                {/* Contact Section */}
+                <div className="card">
+                    <h3 style={{ marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        📞 Contact Information
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                        <div className="input-group">
+                            <label>Phone Numbers (comma separated)</label>
+                            <input 
+                                value={settings.phone} 
+                                onChange={e => setSettings({ ...settings, phone: e.target.value })}
+                                placeholder="8838993915, 9361066673"
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label>Full Address</label>
+                            <textarea 
+                                value={settings.address} 
+                                onChange={e => setSettings({ ...settings, address: e.target.value })}
+                                placeholder="496/2 Bangalore Main Road, SS Lodge Ground Floor, Chengam - 606 709"
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Bill Configuration */}
+                <div className="card" style={{ gridColumn: 'span 2' }}>
+                    <h3 style={{ marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        🧾 Receipt / Bill Configuration
+                    </h3>
+                    <div className="grid grid-2" style={{ gap: 'var(--space-md)' }}>
+                        <div className="input-group">
+                            <label>Receipt Header (Secondary)</label>
+                            <textarea 
+                                value={settings.billHeader} 
+                                onChange={e => setSettings({ ...settings, billHeader: e.target.value })}
+                                placeholder="Additional info to show under address..."
+                                rows={3}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label>Receipt Footer</label>
+                            <textarea 
+                                value={settings.billFooter} 
+                                onChange={e => setSettings({ ...settings, billFooter: e.target.value })}
+                                placeholder="🎉 THANK YOU! VISIT AGAIN ❤️"
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* System Section */}
+                <div className="card" style={{ gridColumn: 'span 2' }}>
+                    <div className="grid grid-3" style={{ gap: 'var(--space-md)' }}>
+                        <div className="input-group">
+                            <label>Tax Percentage (%)</label>
+                            <input 
+                                type="number"
+                                value={settings.taxPercentage} 
+                                onChange={e => setSettings({ ...settings, taxPercentage: parseFloat(e.target.value) })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label>Currency Symbol</label>
+                            <input 
+                                value={settings.currency} 
+                                onChange={e => setSettings({ ...settings, currency: e.target.value })}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <button type="submit" disabled={saving} className="btn btn-primary btn-lg" style={{ width: '100%' }}>
+                                {saving ? 'Saving...' : '💾 Save All Settings'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     );
 }

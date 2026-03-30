@@ -357,9 +357,16 @@ export default function AdminPOS() {
       </style></head><body>
       <div class="center">
         ${settings?.logoUrl ? `<img src="${settings.logoUrl}">` : ''}
-        <div class="header extra-bold">${settings?.restaurantName || 'BUSHRA FAMILY RESTAURANT'}</div>
-        <div class="info">${settings?.billHeader || '496/2 Bangalore Main Road, SS Lodge Ground Floor, Chengam'}</div>
-        <div class="info">Ph: ${settings?.phone || '8838993915'}</div>
+        <div class="header extra-bold" style="text-transform: uppercase;">${settings?.restaurantName || 'BUSHRA FAMILY RESTAURANT'}</div>
+        <div class="info" style="margin-bottom: 2mm;">${settings?.tagline || '⭐ Halal Certified | Premium Dining ⭐'}</div>
+        
+        <div class="info" style="font-size: 8.5pt;">
+            ${settings?.address ? `📍 ${settings.address.replace(/\n/g, '<br>')}` : '📍 496/2 Bangalore Main Road, SS Lodge Ground Floor, Chengam - 606 709'}
+        </div>
+        
+        <div class="info" style="margin-top: 2mm; font-size: 9.5pt;">
+            📞 ${settings?.phone || '8838993915 | 9361066673'}
+        </div>
       </div>
       
       <div class="line"></div>
@@ -409,12 +416,12 @@ export default function AdminPOS() {
       </div>
       <div class="line"></div>
       
-      <div class="center bold" style="font-size:9.5pt; margin-top:2mm; letter-spacing: 0.5px;">
-        ${settings?.billFooter?.replace(/\\n/g, '<br>') || 'THANK YOU! VISIT AGAIN 🙏'}
+      <div class="center bold" style="font-size:10pt; margin-top:3mm; letter-spacing: 0.5px; line-height: 1.5;">
+        ${settings?.billFooter?.replace(/\\n/g, '<br>') || '🎉 THANK YOU FOR DINING WITH US! 🎉<br>❤️ We hope you enjoyed your meal'}
       </div>
       
-      <div class="center" style="font-size:7pt; color: #666; margin-top: 4mm;">
-        Printed on ${new Date().toLocaleString()}
+      <div class="center" style="font-size:7pt; color: #666; margin-top: 5mm; border-top: 1px solid #eee; padding-top: 2mm;">
+        Software by buildXtechs • Printed on ${new Date().toLocaleString()}
       </div>
 
       <script>
