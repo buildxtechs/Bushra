@@ -506,16 +506,24 @@ export default function AdminPOS() {
                                         padding: '24px 12px', borderRadius: 'var(--radius-md)',
                                         border: `2px solid ${m.color}20`, background: `${m.color}05`,
                                         cursor: 'pointer', transition: '0.3s',
-                                        color: 'var(--text-primary)', fontWeight: 800, fontSize: 'var(--font-sm)'
+                                        color: 'var(--text-primary)', fontWeight: 800, fontSize: 'var(--font-sm)',
+                                        '--m-color': m.color,
+                                        '--m-bg-hover': `${m.color}15`,
+                                        '--m-shadow': `${m.color}30`
                                     }}>
                                     <span style={{ fontSize: 32 }}>{m.icon}</span>
                                     {m.label.toUpperCase()}
-                                    <style jsx>{`
-                                        .payment-mode-btn:hover { background: ${m.color}15; border-color: ${m.color}; transform: translateY(-4px); box-shadow: 0 10px 20px -5px ${m.color}30; }
-                                        .payment-mode-btn:active { transform: scale(0.95); }
-                                    `}</style>
                                 </button>
                             ))}
+                            <style jsx>{`
+                                .payment-mode-btn:hover { 
+                                    background: var(--m-bg-hover) !important; 
+                                    border-color: var(--m-color) !important; 
+                                    transform: translateY(-4px); 
+                                    box-shadow: 0 10px 20px -5px var(--m-shadow); 
+                                }
+                                .payment-mode-btn:active { transform: scale(0.95); }
+                            `}</style>
                         </div>
                     </div>
                 ) : (
