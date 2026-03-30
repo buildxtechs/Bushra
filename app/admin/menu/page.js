@@ -1,19 +1,18 @@
 'use client';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import { useState, useEffect } from 'react';
 import Modal from '@/components/Modal';
 import { useToast } from '@/components/Toast';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import { useAdmin } from '@/lib/contexts/AdminContext';
+import { SkeletonTable } from '@/components/Skeleton';
 
 export default function MenuManagement() {
-    const [items, setItems] = useState([]);
-    const [categories, setCategories] = useState([]);
+    const { categories, menu: items, loading, settings, refreshData } = useAdmin();
+    
     const [showModal, setShowModal] = useState(false);
     const [showCatModal, setShowCatModal] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [settings, setSettings] = useState(null);
     const { addToast } = useToast();
     const { confirm } = useConfirm();
 
@@ -26,22 +25,7 @@ export default function MenuManagement() {
     const [itemsPerPage] = useState(25);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const fetchData = async () => {
-        try {
-            const res = await fetch('/api/admin/setup');
-            const data = await res.json();
-            
-            if (data.error) throw new Error(data.error);
-
-            setCategories(data.categories || []);
-            setItems(data.menu || []);
-            setSettings(data.settings || {});
-        } catch (err) {
-            addToast(err.message || 'Failed to load data', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const fetchData = () => refreshData(true); // Silent refresh to keep background updated
 
     useEffect(() => { fetchData(); }, []);
 
@@ -166,7 +150,7 @@ export default function MenuManagement() {
         };
     };
 
-    if (loading) return <LoadingAnimation />;
+    if (loading && items.length === 0) return <SkeletonTable rows={10} cols={8} />;
 
     return (
         <div className="animate-fadeIn">

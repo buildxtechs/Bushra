@@ -1,34 +1,24 @@
 'use client';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import { useState, useEffect } from 'react';
 import Modal from '@/components/Modal';
 import { useToast } from '@/components/Toast';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import { useAdmin } from '@/lib/contexts/AdminContext';
+import { SkeletonCard, Shimmer } from '@/components/Skeleton';
 
 export default function CategoriesManagement() {
-    const [categories, setCategories] = useState([]);
+    const { categories, loading, refreshData } = useAdmin();
+    
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [loading, setLoading] = useState(true);
     const { addToast } = useToast();
     const { confirm } = useConfirm();
 
     const emptyCat = { name: '', image: '', description: '' };
     const [form, setForm] = useState(emptyCat);
 
-    const fetchCategories = async () => {
-        try {
-            const res = await fetch('/api/categories');
-            const data = await res.json();
-            setCategories(data || []);
-            setLoading(false);
-        } catch (err) {
-            addToast('Failed to fetch categories', 'error');
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => { fetchCategories(); }, []);
+    const fetchData = () => refreshData(true);
+    useEffect(() => { fetchData(); }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -83,7 +73,23 @@ export default function CategoriesManagement() {
         };
     };
 
-    if (loading) return <LoadingAnimation />;
+    if (loading && categories.length === 0) {
+        return (
+            <div className="animate-fadeIn">
+                <Shimmer />
+                <div className="page-header">
+                    <div style={{ width: '300px' }}><SkeletonCard height="40px" /></div>
+                    <div style={{ width: '100px' }}><SkeletonCard height="40px" /></div>
+                </div>
+                <div className="grid grid-4" style={{ gap: '20px' }}>
+                    <SkeletonCard height="180px" />
+                    <SkeletonCard height="180px" />
+                    <SkeletonCard height="180px" />
+                    <SkeletonCard height="180px" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="animate-fadeIn">

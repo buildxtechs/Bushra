@@ -1,4 +1,5 @@
 'use client';
+import { AdminProvider } from '@/lib/contexts/AdminContext';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
@@ -19,8 +20,9 @@ export default function AdminLayout({ children }) {
     if (status === 'loading') return <LoadingAnimation fullScreen={true} />;
 
     return (
-        <div className={`dashboard-layout ${!isSidebarOpen ? 'sidebar-hidden' : ''}`}>
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <AdminProvider>
+            <div className={`dashboard-layout ${!isSidebarOpen ? 'sidebar-hidden' : ''}`}>
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             
             {/* Mobile Header */}
             <header className="mobile-header" style={{
@@ -83,5 +85,6 @@ export default function AdminLayout({ children }) {
                 {children}
             </main>
         </div>
+        </AdminProvider>
     );
 }

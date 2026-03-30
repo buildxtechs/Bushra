@@ -4,10 +4,12 @@ import { NextResponse } from "next/server";
 export async function GET() {
     try {
         // Concurrently fetch all essential dashboard data in a single round-trip
-        const [categories, menuItems, settings] = await Promise.all([
+        const [categories, menuItems, settings, inventory, suppliers] = await Promise.all([
             db.read('categories'),
             db.read('menuitems'),
-            db.read('settings') // db.read('settings') will return the first document or default
+            db.read('settings'),
+            db.read('inventory'),
+            db.read('suppliers')
         ]);
 
         // Optimized mapping for the menu items
@@ -24,7 +26,9 @@ export async function GET() {
         const responseData = {
             categories: categories || [],
             menu: populatedMenu || [],
-            settings: Array.isArray(settings) ? settings[0] : (settings || {})
+            settings: Array.isArray(settings) ? settings[0] : (settings || {}),
+            inventory: inventory || [],
+            suppliers: suppliers || []
         };
 
         return NextResponse.json(responseData);

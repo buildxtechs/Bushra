@@ -1,8 +1,8 @@
 'use client';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/Toast';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { SkeletonTable, Shimmer } from '@/components/Skeleton';
 
 export default function AdminOrders() {
     const [orders, setOrders] = useState([]);
@@ -39,7 +39,18 @@ export default function AdminOrders() {
         }
     };
 
-    if (loading) return <LoadingAnimation />;
+    if (loading && orders.length === 0) {
+        return (
+            <div className="animate-fadeIn">
+                <Shimmer />
+                <div className="page-header">
+                   <div style={{ width: '300px' }}><SkeletonTable rows={1} cols={1} /></div>
+                   <div style={{ width: '100px' }}><SkeletonTable rows={1} cols={1} /></div>
+                </div>
+                <SkeletonTable rows={10} cols={6} />
+            </div>
+        );
+    }
 
     return (
         <div className="animate-fadeIn">

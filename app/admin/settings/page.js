@@ -1,33 +1,21 @@
 'use client';
 import { useState, useEffect } from 'react';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import { useToast } from '@/components/Toast';
+import { useAdmin } from '@/lib/contexts/AdminContext';
+import { SkeletonCard, Shimmer } from '@/components/Skeleton';
 
 export default function SettingsPage() {
-    const [settings, setSettings] = useState({
-        billHeader: '',
-        billFooter: '',
-        taxPercentage: 0,
-        gstin: '',
-        phone: '',
-        restaurantName: '',
-        logoUrl: '',
-        containerPrice: 0,
-        gravyPrice: 0
-    });
-    const [loading, setLoading] = useState(true);
+    const { settings, loading, refreshData } = useAdmin();
+    const [localSettings, setLocalSettings] = useState(settings);
     const [saving, setSaving] = useState(false);
     const { addToast } = useToast();
 
+    // Sync local state when global context updates (e.g. initial load)
     useEffect(() => {
-        fetch('/api/admin/setup')
-            .then(r => r.json())
-            .then(data => {
-                if (data.settings) setSettings(data.settings);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, []);
+        if (settings && Object.keys(settings).length > 0) {
+            setLocalSettings(settings);
+        }
+    }, [settings]);
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -36,10 +24,11 @@ export default function SettingsPage() {
             const res = await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(settings)
+                body: JSON.stringify(localSettings)
             });
             if (res.ok) {
                 addToast('Settings saved successfully', 'success');
+                refreshData(true); // Update global context
             } else {
                 addToast('Failed to save settings', 'error');
             }
@@ -50,7 +39,14 @@ export default function SettingsPage() {
         }
     };
 
-    if (loading) return <LoadingAnimation />;
+    if (loading && (!localSettings || Object.keys(localSettings).length === 0)) {
+        return (
+            <div className="grid grid-2" style={{ marginTop: '40px' }}>
+                <SkeletonCard height="300px" />
+                <SkeletonCard height="300px" />
+            </div>
+        );
+    }
 
     return (
         <div className="animate-fadeIn">
@@ -89,8 +85,8 @@ export default function SettingsPage() {
                         <div className="input-group">
                             <label>Restaurant Name</label>
                             <input 
-                                value={settings.restaurantName}
-                                onChange={e => setSettings({...settings, restaurantName: e.target.value})}
+                                value={localSettings.restaurantName}
+                                onChange={e => setLocalSettings(prev => ({...prev, restaurantName: e.target.value}))}
                                 placeholder="Enter restaurant name..."
                             />
                         </div>
@@ -98,16 +94,16 @@ export default function SettingsPage() {
                              <div className="input-group">
                                 <label>Phone Number</label>
                                 <input 
-                                    value={settings.phone}
-                                    onChange={e => setSettings({...settings, phone: e.target.value})}
+                                    value={localSettings.phone}
+                                    onChange={e => setLocalSettings(prev => ({...prev, phone: e.target.value}))}
                                     placeholder="+91..."
                                 />
                             </div>
                             <div className="input-group">
                                 <label>GSTIN</label>
                                 <input 
-                                    value={settings.gstin}
-                                    onChange={e => setSettings({...settings, gstin: e.target.value})}
+                                    value={localSettings.gstin}
+                                    onChange={e => setLocalSettings(prev => ({...prev, gstin: e.target.value}))}
                                     placeholder="27AA..."
                                 />
                             </div>
@@ -124,8 +120,8 @@ export default function SettingsPage() {
                         <div className="input-group">
                             <label>Bill Header Text</label>
                             <textarea 
-                                value={settings.billHeader}
-                                onChange={e => setSettings({...settings, billHeader: e.target.value})}
+                                value={localSettings.billHeader}
+                                onChange={e => setLocalSettings(prev => ({...prev, billHeader: e.target.value}))}
                                 placeholder="Enter address and additional contact info..."
                                 style={{ minHeight: 80 }}
                             />
@@ -134,8 +130,8 @@ export default function SettingsPage() {
                         <div className="input-group">
                             <label>Bill Footer Text</label>
                             <textarea 
-                                value={settings.billFooter}
-                                onChange={e => setSettings({...settings, billFooter: e.target.value})}
+                                value={localSettings.billFooter}
+                                onChange={e => setLocalSettings(prev => ({...prev, billFooter: e.target.value}))}
                                 placeholder="Enter thank you message..."
                                 style={{ minHeight: 60 }}
                             />
@@ -157,8 +153,8 @@ export default function SettingsPage() {
                                 <input 
                                     type="number" 
                                     step="0.01"
-                                    value={settings.taxPercentage}
-                                    onChange={e => setSettings({...settings, taxPercentage: parseFloat(e.target.value) || 0})}
+                                    value={localSettings.taxPercentage}
+                                    onChange={e => setLocalSettings(prev => ({...prev, taxPercentage: parseFloat(e.target.value) || 0}))}
                                     placeholder="0.00"
                                     style={{ flex: 1 }}
                                 />
@@ -181,8 +177,8 @@ export default function SettingsPage() {
                                 <input 
                                     type="number" 
                                     step="0.01"
-                                    value={settings.containerPrice}
-                                    onChange={e => setSettings({...settings, containerPrice: parseFloat(e.target.value) || 0})}
+                                    value={localSettings.containerPrice}
+                                    onChange={e => setLocalSettings(prev => ({...prev, containerPrice: parseFloat(e.target.value) || 0}))}
                                     placeholder="0.00"
                                 />
                             </div>
@@ -191,8 +187,8 @@ export default function SettingsPage() {
                                 <input 
                                     type="number" 
                                     step="0.01"
-                                    value={settings.gravyPrice}
-                                    onChange={e => setSettings({...settings, gravyPrice: parseFloat(e.target.value) || 0})}
+                                    value={localSettings.gravyPrice}
+                                    onChange={e => setLocalSettings(prev => ({...prev, gravyPrice: parseFloat(e.target.value) || 0}))}
                                     placeholder="0.00"
                                 />
                             </div>
@@ -222,21 +218,21 @@ export default function SettingsPage() {
                             whiteSpace: 'pre-wrap',
                             boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
                         }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{settings.restaurantName || 'RESTAURANT NAME'}</div>
-                            {settings.billHeader}
-                            {settings.phone && <div>PH: {settings.phone}</div>}
-                            {settings.gstin && <div>GST: {settings.gstin}</div>}
+                            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{localSettings.restaurantName || 'RESTAURANT NAME'}</div>
+                            {localSettings.billHeader}
+                            {localSettings.phone && <div>PH: {localSettings.phone}</div>}
+                            {localSettings.gstin && <div>GST: {localSettings.gstin}</div>}
                             <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px dashed #ccc' }} />
                             <div style={{ textAlign: 'left' }}>
                                 ITEM 1           ₹100.00<br/>
                                 ITEM 2           ₹200.00<br/>
                                 <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #eee' }} />
                                 SUB-TOTAL        ₹300.00<br/>
-                                GST ({settings.taxPercentage}%)      ₹{(300 * settings.taxPercentage / 100).toFixed(2)}<br/>
-                                <strong>TOTAL            ₹{(300 * (1 + settings.taxPercentage / 100)).toFixed(2)}</strong>
+                                GST ({localSettings.taxPercentage}%)      ₹{(300 * localSettings.taxPercentage / 100).toFixed(2)}<br/>
+                                <strong>TOTAL            ₹{(300 * (1 + localSettings.taxPercentage / 100)).toFixed(2)}</strong>
                             </div>
                             <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px dashed #ccc' }} />
-                            {settings.billFooter}
+                            {localSettings.billFooter}
                         </div>
                     </div>
                 </div>
