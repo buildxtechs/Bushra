@@ -307,8 +307,18 @@ export default function AdminPOS() {
 
     const printReceipt = () => {
         if (!lastOrder) return;
-        const win = window.open('', '_blank');
-        win.document.write(`
+        
+        let printFrame = document.getElementById('print-frame');
+        if (!printFrame) {
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'print-frame';
+            printFrame.style.display = 'none';
+            document.body.appendChild(printFrame);
+        }
+
+        const doc = printFrame.contentWindow.document;
+        doc.open();
+        doc.write(`
       <html><head><title>Receipt - ${lastOrder.orderId}</title>
       <style>
         @page { margin: 0; }
@@ -360,10 +370,16 @@ export default function AdminPOS() {
       <div class="total-row extra-bold" style="font-size:14pt; padding-top:1mm"><span>TOTAL</span><span>₹ ${lastOrder.total.toFixed(0)}</span></div>
       <div class="line"></div>
       <div class="center bold" style="font-size:9.5pt; margin-top:2mm;">${settings?.billFooter?.replace(/\\n/g, '<br>') || 'THANK YOU! VISIT AGAIN 🙏'}</div>
-      <script>window.onload = () => { setTimeout(() => { window.print(); window.onafterprint = () => window.close(); }, 500); };</script>
+      <script>
+        window.onload = () => {
+          setTimeout(() => {
+            window.print();
+          }, 300);
+        };
+      </script>
       </body></html>
     `);
-        win.document.close();
+        doc.close();
     };
 
     if (loading) return <LoadingAnimation />;
