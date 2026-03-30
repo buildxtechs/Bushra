@@ -362,6 +362,87 @@ export default function AdminPOS() {
                 .tab { padding: 8px 16px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); font-size: var(--font-xs); font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.2s; }
                 .tab.active { background: var(--gradient-primary); border-color: transparent; color: white; box-shadow: 0 4px 12px rgba(249,115,22,0.2); }
                 
+                /* Premium Cart Styles */
+                .cart-column { 
+                    background: var(--bg-glass) !important; 
+                    backdrop-filter: blur(25px); 
+                    -webkit-backdrop-filter: blur(25px);
+                    border: 1px solid var(--glass-border) !important;
+                    box-shadow: var(--shadow-lg);
+                }
+
+                .segment-control { 
+                    display: flex; 
+                    background: var(--bg-input); 
+                    padding: 4px; 
+                    border-radius: var(--radius-md); 
+                    gap: 4px;
+                    border: 1px solid var(--border-light);
+                }
+                .segment-btn { 
+                    flex: 1; padding: 10px; border-radius: var(--radius-sm); border: none; 
+                    background: transparent; color: var(--text-secondary); 
+                    font-size: 10px; font-weight: 700; cursor: pointer; transition: var(--transition);
+                    display: flex; flex-direction: column; align-items: center; gap: 4px;
+                }
+                .segment-btn.active { 
+                    background: var(--gradient-primary); color: white; 
+                    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+                }
+                .segment-btn:not(.active):hover { background: rgba(255,255,255,0.03); color: var(--text-primary); }
+
+                .input-modern {
+                    background: var(--bg-input) !important;
+                    border: 1px solid var(--border) !important;
+                    border-radius: var(--radius-sm) !important;
+                    padding: 10px 14px !important;
+                    font-size: var(--font-xs) !important;
+                    color: var(--text-primary) !important;
+                    transition: var(--transition-fast) !important;
+                }
+                .input-modern:focus {
+                    border-color: var(--accent-primary) !important;
+                    box-shadow: 0 0 0 3px var(--accent-glow) !important;
+                    background: var(--bg-card) !important;
+                }
+
+                .parcel-card {
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid var(--border-light);
+                    border-radius: var(--radius-md);
+                    padding: 12px;
+                    margin-top: 12px;
+                }
+
+                .counter-btn {
+                    width: 28px; height: 28px; border-radius: 50%; border: none;
+                    background: var(--bg-card); color: var(--text-primary);
+                    display: flex; align-items: center; justify-content: center;
+                    cursor: pointer; transition: 0.2s; font-weight: 800;
+                    border: 1px solid var(--border);
+                }
+                .counter-btn:hover { background: var(--accent-primary); color: white; border-color: var(--accent-primary); transform: scale(1.1); }
+                .counter-btn:active { transform: scale(0.9); }
+
+                .cart-item-row {
+                    display: flex; align-items: center; gap: 12px; padding: 14px 0;
+                    border-bottom: 1px solid var(--border-light);
+                    transition: 0.2s;
+                }
+                .cart-item-row:hover { background: rgba(255,255,255,0.01); }
+
+                .pay-btn-premium {
+                    background: var(--gradient-primary);
+                    color: white; font-weight: 800; border: none;
+                    position: relative; overflow: hidden;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+                }
+                .pay-btn-premium::after {
+                    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+                    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+                    transform: rotate(45deg); animation: shimmer 3s infinite;
+                }
+
                 .payment-mode-btn:hover { 
                     background: var(--m-bg-hover) !important; 
                     border-color: var(--m-color) !important; 
@@ -406,43 +487,67 @@ export default function AdminPOS() {
 
             {/* Right: Cart */}
             <div className="cart-column" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-                <div style={{ padding: 'var(--space-md)', borderBottom: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-                        {['dine_in', 'takeaway', 'delivery'].map(t => <button key={t} className={`btn btn-sm ${orderType === t ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setOrderType(t)} style={{ flex: 1, fontSize: '10px' }}>{t.replace(/_/g, ' ')}</button>)}
+                <div style={{ padding: 'var(--space-md)', borderBottom: '1px solid var(--border-light)' }}>
+                    <div className="segment-control" style={{ marginBottom: 'var(--space-md)' }}>
+                        {[
+                            { id: 'dine_in', label: 'Dine-in', icon: '🍽️' },
+                            { id: 'takeaway', label: 'Takeaway', icon: '🛍️' },
+                            { id: 'delivery', label: 'Delivery', icon: '🚚' }
+                        ].map(t => (
+                            <button key={t.id} 
+                                className={`segment-btn ${orderType === t.id ? 'active' : ''}`} 
+                                onClick={() => setOrderType(t.id)}>
+                                <span>{t.icon}</span>
+                                {t.label}
+                            </button>
+                        ))}
                     </div>
-                    <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-                        <input placeholder="Customer name" value={customerName} onChange={e => setCustomerName(e.target.value)} style={{ flex: 1, minWidth: '120px', padding: '6px 10px', fontSize: 'var(--font-xs)' }} />
-                        <input placeholder="Phone" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} style={{ flex: 1, minWidth: '120px', padding: '6px 10px', fontSize: 'var(--font-xs)' }} />
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
+                        <div className="input-group">
+                            <input className="input-modern" placeholder="👤 Customer Name" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+                        </div>
+                        <div className="input-group">
+                            <input className="input-modern" placeholder="📞 Phone Number" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                         {orderType === 'dine_in' && (
-                            <select value={selectedTable} onChange={e => setSelectedTable(e.target.value)} style={{ width: 100, padding: '6px', fontSize: 'var(--font-xs)' }}>
-                                <option value="">Table</option>
-                                {tables.filter(t => t.status === 'available').map(t => <option key={t._id} value={t._id}>T{t.number}</option>)}
+                            <select className="input-modern" value={selectedTable} onChange={e => setSelectedTable(e.target.value)} style={{ flex: 1 }}>
+                                <option value="">🪑 Select Table</option>
+                                {tables.filter(t => t.status === 'available').map(t => <option key={t._id} value={t._id}>Table T{t.number}</option>)}
                             </select>
                         )}
                     </div>
-                    <div style={{ marginTop: 'var(--space-sm)', padding: 'var(--space-sm)', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+
+                    <div className="parcel-card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 'var(--font-xs)', fontWeight: 700 }}>🥡 Parcel?</span>
-                            <div onClick={() => setParcelOptions(prev => ({ ...prev, isParcel: !prev.isParcel }))} style={{ width: 36, height: 20, borderRadius: 10, background: parcelOptions.isParcel ? 'var(--accent-primary)' : 'var(--border)', position: 'relative', cursor: 'pointer' }}>
-                                <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: parcelOptions.isParcel ? 18 : 2, transition: '0.2s' }}></div>
+                            <span style={{ fontSize: 'var(--font-xs)', fontWeight: 800, color: 'var(--text-primary)' }}>📦 Parcel Service</span>
+                            <div onClick={() => setParcelOptions(prev => ({ ...prev, isParcel: !prev.isParcel }))} 
+                                style={{ 
+                                    width: 42, height: 22, borderRadius: 11, background: parcelOptions.isParcel ? 'var(--gradient-primary)' : 'var(--border)', 
+                                    position: 'relative', cursor: 'pointer', transition: '0.3s', boxShadow: parcelOptions.isParcel ? '0 0 10px rgba(249,115,22,0.3)' : 'none'
+                                }}>
+                                <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: parcelOptions.isParcel ? 22 : 2, transition: '0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)' }}></div>
                             </div>
                         </div>
                         {parcelOptions.isParcel && (
-                            <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 8 }}>
+                            <div style={{ display: 'flex', gap: 'var(--space-md)', marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ fontSize: '9px', fontWeight: 600 }}>Containers</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <button onClick={() => setParcelOptions(p => ({ ...p, containerCount: Math.max(0, p.containerCount - 1) }))}>-</button>
-                                        <span style={{ fontSize: 11 }}>{parcelOptions.containerCount}</span>
-                                        <button onClick={() => setParcelOptions(p => ({ ...p, containerCount: p.containerCount + 1 }))}>+</button>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', marginBottom: 6, fontWeight: 600 }}>CONTAINERS</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <button className="counter-btn" onClick={() => setParcelOptions(p => ({ ...p, containerCount: Math.max(0, p.containerCount - 1) }))}>-</button>
+                                        <span style={{ fontSize: 13, fontWeight: 800, minWidth: 15, textAlign: 'center' }}>{parcelOptions.containerCount}</span>
+                                        <button className="counter-btn" onClick={() => setParcelOptions(p => ({ ...p, containerCount: p.containerCount + 1 }))}>+</button>
                                     </div>
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ fontSize: '9px', fontWeight: 600 }}>Gravy</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <button onClick={() => setParcelOptions(p => ({ ...p, gravyCount: Math.max(0, p.gravyCount - 1) }))}>-</button>
-                                        <span style={{ fontSize: 11 }}>{parcelOptions.gravyCount}</span>
-                                        <button onClick={() => setParcelOptions(p => ({ ...p, gravyCount: p.gravyCount + 1 }))}>+</button>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', marginBottom: 6, fontWeight: 600 }}>GRAVY BOX</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <button className="counter-btn" onClick={() => setParcelOptions(p => ({ ...p, gravyCount: Math.max(0, p.gravyCount - 1) }))}>-</button>
+                                        <span style={{ fontSize: 13, fontWeight: 800, minWidth: 15, textAlign: 'center' }}>{parcelOptions.gravyCount}</span>
+                                        <button className="counter-btn" onClick={() => setParcelOptions(p => ({ ...p, gravyCount: p.gravyCount + 1 }))}>+</button>
                                     </div>
                                 </div>
                             </div>
@@ -450,19 +555,24 @@ export default function AdminPOS() {
                     </div>
                 </div>
 
-                <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm)' }}>
-                    {cart.length === 0 ? <p style={{ textAlign: 'center', marginTop: 40, color: 'var(--text-muted)' }}>Cart is empty</p> : cart.map(item => (
-                        <div key={item._id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm) var(--space-md)' }}>
+                    {cart.length === 0 ? (
+                        <div style={{ textAlign: 'center', marginTop: 60 }}>
+                            <div style={{ fontSize: 40, opacity: 0.3, marginBottom: 12 }}>🛒</div>
+                            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-sm)', fontWeight: 500 }}>Your cart is empty</p>
+                        </div>
+                    ) : cart.map(item => (
+                        <div key={item._id} className="cart-item-row">
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 'var(--font-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>{item.name}</div>
-                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>₹{item.price} per unit</div>
+                                <div style={{ fontSize: 'var(--font-sm)', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 2 }}>{item.name}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>₹{item.price} <span style={{ opacity: 0.6 }}>/ unit</span></div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <button className="btn btn-secondary btn-sm" style={{ padding: '2px 8px', minWidth: 28 }} onClick={() => updateQty(item._id, item.quantity - 1)}>-</button>
-                                <span style={{ fontWeight: 800, fontSize: 'var(--font-sm)', minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
-                                <button className="btn btn-secondary btn-sm" style={{ padding: '2px 8px', minWidth: 28 }} onClick={() => updateQty(item._id, item.quantity + 1)}>+</button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <button className="counter-btn" style={{ width: 24, height: 24, fontSize: 14 }} onClick={() => updateQty(item._id, item.quantity - 1)}>-</button>
+                                <span style={{ fontWeight: 800, fontSize: 'var(--font-sm)', minWidth: 18, textAlign: 'center' }}>{item.quantity}</span>
+                                <button className="counter-btn" style={{ width: 24, height: 24, fontSize: 14 }} onClick={() => updateQty(item._id, item.quantity + 1)}>+</button>
                             </div>
-                            <div style={{ fontWeight: 800, minWidth: 60, textAlign: 'right', fontSize: 'var(--font-sm)', color: 'var(--accent-primary)' }}>₹{(item.price * item.quantity).toFixed(0)}</div>
+                            <div style={{ fontWeight: 900, minWidth: 65, textAlign: 'right', fontSize: 'var(--font-md)', color: 'var(--accent-primary)', letterSpacing: '-0.5px' }}>₹{(item.price * item.quantity).toFixed(0)}</div>
                         </div>
                     ))}
                 </div>
@@ -485,8 +595,10 @@ export default function AdminPOS() {
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setCart([])}>Clear</button>
-                        <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => setShowPayment(true)}>Pay ₹{total.toFixed(0)}</button>
+                        <button className="btn btn-secondary" style={{ flex: 1, fontWeight: 700, fontSize: '11px' }} onClick={() => setCart([])}>CLEAR CART</button>
+                        <button className="btn pay-btn-premium" style={{ flex: 2, height: 48, fontSize: 'var(--font-sm)' }} onClick={() => setShowPayment(true)}>
+                            PROCESS PAYMENT • ₹{total.toFixed(0)}
+                        </button>
                     </div>
                 </div>
             </div>
