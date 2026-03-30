@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(req) {
     try {
-        const data = await req.json();
+        const { _id, __v, ...data } = await req.json();
         const existing = await db.findOne('settings', {});
         
         if (existing) {
