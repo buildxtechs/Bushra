@@ -136,6 +136,35 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </div>
+            
+            {/* Payment Mode Stats */}
+            <h3 style={{ fontWeight: 700, marginBottom: 'var(--space-md)', fontSize: 'var(--font-md)' }}>💳 Revenue by Payment Mode</h3>
+            <div className="grid grid-3" style={{ marginBottom: 'var(--space-lg)' }}>
+                <div className="stat-card premium-hover">
+                    <div className="stat-icon" style={{ background: 'rgba(34,197,94,0.15)' }}>💵</div>
+                    <div className="stat-info">
+                        <h3>Cash Collected</h3>
+                        <div className="stat-value" style={{ color: '#22c55e' }}>{formatCurrency(report?.paymentRevenue?.cash || 0)}</div>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Physical currency</p>
+                    </div>
+                </div>
+                <div className="stat-card premium-hover">
+                    <div className="stat-icon" style={{ background: 'rgba(59,130,246,0.15)' }}>💳</div>
+                    <div className="stat-info">
+                        <h3>Card Payments</h3>
+                        <div className="stat-value" style={{ color: '#3b82f6' }}>{formatCurrency(report?.paymentRevenue?.card || 0)}</div>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Swipe/Tap/Insert</p>
+                    </div>
+                </div>
+                <div className="stat-card premium-hover">
+                    <div className="stat-icon" style={{ background: 'rgba(168,85,247,0.15)' }}>📱</div>
+                    <div className="stat-info">
+                        <h3>UPI / QR</h3>
+                        <div className="stat-value" style={{ color: '#a855f7' }}>{formatCurrency(report?.paymentRevenue?.upi || 0)}</div>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Digital transfers</p>
+                    </div>
+                </div>
+            </div>
 
             {/* Revenue Trend Chart Visualization */}
             {report?.revenueByDay && Object.keys(report.revenueByDay).length > 0 && (

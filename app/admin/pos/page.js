@@ -89,6 +89,13 @@ export default function AdminPOS() {
     const [lastOrder, setLastOrder] = useState(null);
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
+    
+    // Parcel Options State
+    const [parcelOptions, setParcelOptions] = useState({
+        isParcel: false,
+        containerCount: 0,
+        gravyCount: 0
+    });
 
     const findAndAddByCode = (val) => {
         if (val.length === 3) {
@@ -188,12 +195,19 @@ export default function AdminPOS() {
     }, []);
 
     const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    
+    // Parcel Charges
+    const containerCharge = parcelOptions.isParcel ? (parcelOptions.containerCount * (settings?.containerPrice || 0)) : 0;
+    const gravyCharge = parcelOptions.isParcel ? (parcelOptions.gravyCount * (settings?.gravyPrice || 0)) : 0;
+    const totalParcelCharges = containerCharge + gravyCharge;
+
     const taxRate = settings?.taxPercentage || 0;
     const tax = cart.reduce((s, i) => {
         const itemTaxRate = i.tax !== undefined ? i.tax : taxRate;
         return s + (i.price * i.quantity * itemTaxRate) / 100;
     }, 0);
-    const total = subtotal + tax - discount;
+    
+    const total = subtotal + tax + totalParcelCharges - discount;
 
     const placeOrder = async () => {
         if (cart.length === 0) { addToast('Add items first', 'warning'); return; }
@@ -203,6 +217,13 @@ export default function AdminPOS() {
             deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
             items: cart.map(i => ({ menuItem: i._id, name: i.name, price: i.price, quantity: i.quantity, specialInstructions: i.specialInstructions })),
             subtotal, tax, discount, total,
+            parcelCharges: parcelOptions.isParcel ? {
+                container: parcelOptions.containerCount,
+                containerPrice: settings?.containerPrice || 0,
+                gravy: parcelOptions.gravyCount,
+                gravyPrice: settings?.gravyPrice || 0,
+                total: totalParcelCharges
+            } : null,
             type: orderType, paymentMethod,
             paymentStatus: 'paid',
             table: selectedTable || undefined,
@@ -228,6 +249,7 @@ export default function AdminPOS() {
             setDeliveryAddress({ street: '', city: '', pincode: '' });
             setNotes('');
             setSelectedTable('');
+            setParcelOptions({ isParcel: false, containerCount: 0, gravyCount: 0 });
             addToast('Order placed successfully!', 'success');
 
             // Refresh tables
@@ -367,6 +389,7 @@ export default function AdminPOS() {
       <div class="dashed-line"></div>
       <div class="total-row"><span>Subtotal Total</span><span>₹ ${lastOrder.subtotal.toFixed(2)}</span></div>
       ${lastOrder.tax > 0 ? `<div class="total-row"><span>GST</span><span>₹ ${lastOrder.tax.toFixed(2)}</span></div>` : ''}
+      ${lastOrder.parcelCharges?.total > 0 ? `<div class="total-row"><span>Parcel Charges</span><span>₹ ${lastOrder.parcelCharges.total.toFixed(2)}</span></div>` : ''}
       ${lastOrder.discount > 0 ? `<div class="total-row"><span>Discount</span><span>-₹ ${lastOrder.discount.toFixed(2)}</span></div>` : ''}
       
       <div class="line"></div>
@@ -412,21 +435,26 @@ export default function AdminPOS() {
                     overflow: hidden;
                 }
 
-                @media (max-width: 1200px) {
+                @media (max-width: 1400px) {
                     .pos-layout {
                         grid-template-columns: 1fr 320px;
+                    }
+                }
+
+                @media (max-width: 1100px) {
+                    .pos-layout {
+                        grid-template-columns: 1fr 300px;
                         gap: var(--space-sm);
                     }
                 }
 
-                @media (max-width: 900px) {
+                @media (max-width: 850px) {
                     .pos-layout {
                         grid-template-columns: 1fr 280px;
-                        gap: var(--space-xs);
                     }
                 }
 
-                @media (max-width: 768px) {
+                @media (max-width: 640px) {
                     .pos-layout {
                         grid-template-columns: 1fr;
                         height: auto;
@@ -605,6 +633,50 @@ export default function AdminPOS() {
                     <div style={{ marginTop: 'var(--space-sm)' }}>
                         <input placeholder="Order Notes (Optional)" value={notes} onChange={e => setNotes(e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: 'var(--font-xs)' }} />
                     </div>
+
+                    {/* Parcel Options */}
+                    <div style={{ 
+                        marginTop: 'var(--space-sm)', 
+                        padding: 'var(--space-sm)', 
+                        background: 'rgba(255,255,255,0.02)', 
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-light)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: parcelOptions.isParcel ? 'var(--space-sm)' : 0 }}>
+                            <span style={{ fontSize: 'var(--font-xs)', fontWeight: 700 }}>🥡 Is Parcel?</span>
+                            <div 
+                                onClick={() => setParcelOptions(prev => ({ ...prev, isParcel: !prev.isParcel }))}
+                                style={{ 
+                                    width: 36, height: 20, borderRadius: 10, background: parcelOptions.isParcel ? 'var(--accent-primary)' : 'var(--border)',
+                                    position: 'relative', cursor: 'pointer', transition: '0.3s'
+                                }}>
+                                <div style={{ 
+                                    width: 16, height: 16, borderRadius: '50%', background: 'white',
+                                    position: 'absolute', top: 2, left: parcelOptions.isParcel ? 18 : 2, transition: '0.3s'
+                                }}></div>
+                            </div>
+                        </div>
+                        {parcelOptions.isParcel && (
+                            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '9px', fontWeight: 600, display: 'block', marginBottom: 2 }}>Containers</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <button onClick={() => setParcelOptions(p => ({ ...p, containerCount: Math.max(0, p.containerCount - 1) }))} style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>-</button>
+                                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: 15, textAlign: 'center' }}>{parcelOptions.containerCount}</span>
+                                        <button onClick={() => setParcelOptions(p => ({ ...p, containerCount: p.containerCount + 1 }))} style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>+</button>
+                                    </div>
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '9px', fontWeight: 600, display: 'block', marginBottom: 2 }}>Gravy</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <button onClick={() => setParcelOptions(p => ({ ...p, gravyCount: Math.max(0, p.gravyCount - 1) }))} style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>-</button>
+                                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: 15, textAlign: 'center' }}>{parcelOptions.gravyCount}</span>
+                                        <button onClick={() => setParcelOptions(p => ({ ...p, gravyCount: p.gravyCount + 1 }))} style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Cart Items */}
@@ -648,6 +720,11 @@ export default function AdminPOS() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                             <span style={{ color: 'var(--text-secondary)' }}>Tax</span><span>₹{tax.toFixed(2)}</span>
                         </div>
+                        {parcelOptions.isParcel && totalParcelCharges > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                                <span style={{ color: 'var(--text-secondary)' }}>Parcel Charges</span><span>₹{totalParcelCharges.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                             <span style={{ color: 'var(--text-secondary)' }}>Discount</span>
                             <input type="number" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)}

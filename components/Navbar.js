@@ -11,16 +11,42 @@ export default function Navbar() {
     const pathname = usePathname();
     const { data: session } = useSession();
     const { itemCount } = useCart();
+    const [offlineUser, setOfflineUser] = useState(null);
+
+    // Offline Session Support
+    useEffect(() => {
+        if (!session) {
+            const stored = localStorage.getItem('offline_session');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (new Date(parsed.expires) > new Date()) {
+                    setOfflineUser(parsed);
+                } else {
+                    localStorage.removeItem('offline_session');
+                }
+            }
+        } else {
+            setOfflineUser(null);
+        }
+    }, [session]);
+
+    const activeUser = session?.user || offlineUser;
+    const isLoggedIn = !!activeUser;
 
     const links = [
         { href: '/', label: 'Home' },
         { href: '/menu', label: 'Menu' },
     ];
 
-    const authLinks = session ? [
+    const authLinks = isLoggedIn ? [
         { href: '/orders', label: 'Orders' },
         { href: '/profile', label: 'Profile' },
     ] : [];
+    
+    const isAdmin = activeUser?.role === 'admin';
+    if (isAdmin) {
+        authLinks.push({ href: '/admin/dashboard', label: 'Dashboard' });
+    }
 
     return (
         <nav style={{
@@ -74,7 +100,7 @@ export default function Navbar() {
                     }}>{link.label}</Link>
                 ))}
 
-                {session && (
+                {isLoggedIn && (
                     <Link href="/cart" style={{
                         position: 'relative', textDecoration: 'none',
                         fontSize: 'var(--font-sm)', fontWeight: 500,
@@ -93,8 +119,19 @@ export default function Navbar() {
                     </Link>
                 )}
 
-                {session ? (
-                    <button onClick={() => signOut({ callbackUrl: '/' })} className="btn btn-secondary btn-sm">Logout</button>
+                {isLoggedIn ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
+                                {offlineUser ? 'Offline' : (activeUser?.role || 'User')}
+                            </span>
+                            <span style={{ fontSize: 'var(--font-xs)', fontWeight: 600 }}>{activeUser?.name}</span>
+                        </div>
+                        <button onClick={() => {
+                            localStorage.removeItem('offline_session');
+                            signOut({ callbackUrl: '/' });
+                        }} className="btn btn-secondary btn-sm">Logout</button>
+                    </div>
                 ) : (
                     <Link href="/login" className="btn btn-primary btn-sm">Login</Link>
                 )}
@@ -126,14 +163,18 @@ export default function Navbar() {
                                 borderRadius: 'var(--radius-sm)',
                             }}>{link.label}</Link>
                     ))}
-                    {session && (
+                    {isLoggedIn && (
                         <Link href="/cart" onClick={() => setMenuOpen(false)}
                             style={{ padding: '10px', fontSize: 'var(--font-sm)', color: 'var(--text-secondary)', textDecoration: 'none' }}>
                             🛒 Cart ({itemCount})
                         </Link>
                     )}
-                    {session ? (
-                        <button onClick={() => { signOut({ callbackUrl: '/' }); setMenuOpen(false); }} className="btn btn-secondary" style={{ marginTop: '8px' }}>Logout</button>
+                    {isLoggedIn ? (
+                        <button onClick={() => { 
+                            localStorage.removeItem('offline_session');
+                            signOut({ callbackUrl: '/' }); 
+                            setMenuOpen(false); 
+                        }} className="btn btn-secondary" style={{ marginTop: '8px' }}>Logout ({activeUser?.name})</button>
                     ) : (
                         <Link href="/login" className="btn btn-primary" onClick={() => setMenuOpen(false)}>Login</Link>
                     )}

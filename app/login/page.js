@@ -6,13 +6,28 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { db } from '@/lib/offline-db';
 import bcrypt from 'bcryptjs';
+import { useToast } from '@/components/Toast';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isOnline, setIsOnline] = useState(true);
     const router = useRouter();
+    const { addToast } = useToast();
+
+    useEffect(() => {
+        setIsOnline(navigator.onLine);
+        const handleStatus = () => setIsOnline(navigator.onLine);
+        window.addEventListener('online', handleStatus);
+        window.addEventListener('offline', handleStatus);
+        return () => {
+            window.removeEventListener('online', handleStatus);
+            window.removeEventListener('offline', handleStatus);
+        };
+    }, []);
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
@@ -20,6 +35,30 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
+            if (!navigator.onLine) {
+                // Pre-emptive offline login
+                const offlineUser = await db.users.get({ email });
+                if (offlineUser) {
+                    const passwordsMatch = await bcrypt.compare(password, offlineUser.passwordHash);
+                    if (passwordsMatch) {
+                        addToast('Logging in offline...', 'info');
+                        localStorage.setItem('offline_session', JSON.stringify({
+                            email: offlineUser.email,
+                            name: offlineUser.name,
+                            role: offlineUser.role,
+                            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                        }));
+                        if (offlineUser.role === 'admin') router.push('/admin/dashboard');
+                        else if (offlineUser.role === 'delivery') router.push('/delivery');
+                        else router.push('/menu');
+                        return;
+                    }
+                }
+                setError('Network unavailable and no cached credentials found for this email.');
+                setLoading(false);
+                return;
+            }
+
             const result = await signIn('credentials', {
                 email,
                 password,
@@ -147,7 +186,17 @@ export default function LoginPage() {
                     </p>
                 </div>
 
-                <div className="card" style={{ padding: 'var(--space-xl)' }}>
+                <div className="card" style={{ padding: 'var(--space-xl)', position: 'relative', overflow: 'hidden' }}>
+                    {!isOnline && (
+                        <div style={{
+                            position: 'absolute', top: 0, left: 0, right: 0,
+                            background: 'var(--danger)', color: 'white',
+                            fontSize: '10px', textAlign: 'center', padding: '4px',
+                            fontWeight: 800, zIndex: 10
+                        }}>
+                            📍 YOU ARE CURRENTLY OFFLINE
+                        </div>
+                    )}
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
                         {error && (
                             <div style={{

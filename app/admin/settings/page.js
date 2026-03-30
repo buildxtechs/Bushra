@@ -11,7 +11,9 @@ export default function SettingsPage() {
         gstin: '',
         phone: '',
         restaurantName: '',
-        logoUrl: ''
+        logoUrl: '',
+        containerPrice: 0,
+        gravyPrice: 0
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -167,6 +169,38 @@ export default function SettingsPage() {
                         <div className="mt-md">
                             <button type="submit" className="btn btn-primary" disabled={saving}>
                                 {saving ? 'Saving...' : 'Update Tax Rate'}
+                            </button>
+                        </div>
+                    </form>
+
+                    <h3 style={{ margin: 'var(--space-xl) 0 var(--space-md) 0' }}>🥡 Parcel & Packaging Charges</h3>
+                    <form onSubmit={handleSave} className="flex-col gap-md">
+                        <div className="grid grid-2">
+                            <div className="input-group">
+                                <label>Container Price (₹)</label>
+                                <input 
+                                    type="number" 
+                                    step="0.01"
+                                    value={settings.containerPrice}
+                                    onChange={e => setSettings({...settings, containerPrice: parseFloat(e.target.value) || 0})}
+                                    placeholder="0.00"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Gravy Cup Price (₹)</label>
+                                <input 
+                                    type="number" 
+                                    step="0.01"
+                                    value={settings.gravyPrice}
+                                    onChange={e => setSettings({...settings, gravyPrice: parseFloat(e.target.value) || 0})}
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+                        <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>These prices will be available to add in the POS cart for parcel orders.</p>
+                        <div className="mt-md">
+                            <button type="submit" className="btn btn-primary" disabled={saving}>
+                                {saving ? 'Saving...' : 'Update Parcel Prices'}
                             </button>
                         </div>
                     </form>
