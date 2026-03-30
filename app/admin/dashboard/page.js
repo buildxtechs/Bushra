@@ -98,6 +98,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Main Financial Stats */}
+            {/* Main Financial Stats */}
             <div className="grid grid-4" style={{ marginBottom: 'var(--space-lg)' }}>
                 <div className="stat-card premium-hover">
                     <div className="stat-icon" style={{ background: 'rgba(249,115,22,0.15)' }}>💰</div>
@@ -133,6 +134,34 @@ export default function AdminDashboard() {
                             {formatCurrency(report?.avgOrderValue || 0)}
                         </div>
                         <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Per customer sale</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Payment Mode Stats */}
+            <div className="grid grid-3" style={{ marginBottom: 'var(--space-lg)' }}>
+                <div className="stat-card premium-hover">
+                    <div className="stat-icon" style={{ background: 'rgba(34,197,94,0.15)' }}>💵</div>
+                    <div className="stat-info">
+                        <h3>Cash Payments</h3>
+                        <div className="stat-value">{formatCurrency(report?.paymentMethods?.cash || 0)}</div>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Total cash collected</p>
+                    </div>
+                </div>
+                <div className="stat-card premium-hover">
+                    <div className="stat-icon" style={{ background: 'rgba(59,130,246,0.15)' }}>💳</div>
+                    <div className="stat-info">
+                        <h3>Card Payments</h3>
+                        <div className="stat-value">{formatCurrency(report?.paymentMethods?.card || 0)}</div>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Total card transactions</p>
+                    </div>
+                </div>
+                <div className="stat-card premium-hover">
+                    <div className="stat-icon" style={{ background: 'rgba(168,85,247,0.15)' }}>📱</div>
+                    <div className="stat-info">
+                        <h3>UPI Payments</h3>
+                        <div className="stat-value">{formatCurrency(report?.paymentMethods?.upi || 0)}</div>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Total via UPI/QR</p>
                     </div>
                 </div>
             </div>

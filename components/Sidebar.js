@@ -8,7 +8,14 @@ import { useEffect } from 'react';
 export default function Sidebar({ isOpen, onClose }) {
     const pathname = usePathname();
     const { data: session } = useSession();
-    const role = session?.user?.role;
+    
+    // Support offline session display
+    const offlineSessionStr = typeof window !== 'undefined' ? localStorage.getItem('offline_session') : null;
+    const offlineSession = offlineSessionStr ? JSON.parse(offlineSessionStr) : null;
+    const isOfflineActive = !session && offlineSession && new Date(offlineSession.expires) > new Date();
+    
+    const user = session?.user || (isOfflineActive ? offlineSession : null);
+    const role = user?.role;
 
     // Auto-close on mobile when path changes
     useEffect(() => {
@@ -181,14 +188,17 @@ export default function Sidebar({ isOpen, onClose }) {
                         fontWeight: 700, fontSize: 'var(--font-sm)',
                         color: 'white',
                     }}>
-                        {session?.user?.name?.[0]?.toUpperCase() || '?'}
+                        {user?.name?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div>
-                        <div style={{ fontSize: 'var(--font-sm)', fontWeight: 600 }}>{session?.user?.name || 'User'}</div>
-                        <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{role}</div>
+                        <div style={{ fontSize: 'var(--font-sm)', fontWeight: 600 }}>{user?.name || 'User'}</div>
+                        <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{role} {isOfflineActive ? '(Offline)' : ''}</div>
                     </div>
                 </div>
-                <button onClick={() => signOut({ callbackUrl: '/login' })} className="btn btn-secondary" style={{ width: '100%' }}>
+                <button onClick={() => {
+                    localStorage.removeItem('offline_session');
+                    signOut({ callbackUrl: '/login' });
+                }} className="btn btn-secondary" style={{ width: '100%' }}>
                     🚪 Logout
                 </button>
             </div>

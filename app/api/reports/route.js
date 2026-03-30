@@ -49,12 +49,12 @@ export async function GET(req) {
             return acc;
         }, {});
 
-        // Breakdown by payment method
+        // Breakdown by payment method revenue
         const paymentMethods = validOrders.reduce((acc, o) => {
-            const method = o.paymentMethod || 'unknown';
-            acc[method] = (acc[method] || 0) + 1;
+            const method = (o.paymentMethod || 'unknown').toLowerCase();
+            acc[method] = (acc[method] || 0) + (Number(o.total) || 0);
             return acc;
-        }, {});
+        }, { cash: 0, card: 0, upi: 0 });
 
         // Revenue by Day
         const revenueByDay = validOrders.reduce((acc, o) => {

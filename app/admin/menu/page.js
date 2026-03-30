@@ -96,6 +96,23 @@ export default function MenuManagement() {
         fetchData();
     };
 
+    const updatePrice = async (item, newPrice) => {
+        if (isNaN(newPrice) || newPrice < 0) return;
+        try {
+            const res = await fetch('/api/menu', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: item._id, price: parseFloat(newPrice) })
+            });
+            if (res.ok) {
+                setItems(prev => prev.map(i => i._id === item._id ? { ...i, price: newPrice } : i));
+                addToast('Price updated', 'success');
+            }
+        } catch (err) {
+            addToast('Failed to update price', 'error');
+        }
+    };
+
     const saveCategory = async (e) => {
         e.preventDefault();
         try {
@@ -213,7 +230,33 @@ export default function MenuManagement() {
                                         </div>
                                     </td>
                                     <td><span className="badge badge-info">{item.category?.name || '-'}</span></td>
-                                    <td style={{ fontWeight: 700 }}>₹{item.price}</td>
+                                    <td style={{ fontWeight: 700 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            ₹<input type="number" defaultValue={item.price} 
+                                                onBlur={(e) => {
+                                                    const val = parseFloat(e.target.value);
+                                                    if (val !== item.price) updatePrice(item, val);
+                                                }}
+                                                style={{ 
+                                                    width: 70, 
+                                                    padding: '2px 4px', 
+                                                    fontSize: 'inherit', 
+                                                    fontWeight: 'inherit',
+                                                    border: '1px solid transparent',
+                                                    background: 'transparent',
+                                                    borderRadius: 'var(--radius-sm)'
+                                                }} 
+                                                onFocus={(e) => e.target.style.borderColor = 'var(--border)'}
+                                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                                onMouseLeave={(e) => {
+                                                    if (document.activeElement !== e.target) {
+                                                        e.target.style.background = 'transparent';
+                                                        e.target.style.borderColor = 'transparent';
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </td>
                                     <td>{item.tax}%</td>
                                     <td><span className={`veg-badge ${item.isVeg ? 'veg' : 'non-veg'}`}></span></td>
                                     <td>

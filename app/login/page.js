@@ -4,6 +4,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useToast } from '@/components/Toast';
 import { db } from '@/lib/offline-db';
 import bcrypt from 'bcryptjs';
 
@@ -12,6 +13,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const { addToast } = useToast();
     const router = useRouter();
 
     const handleSubmit = async (e) => {
@@ -81,19 +83,45 @@ export default function LoginPage() {
     };
 
     const handleAdminQuickLogin = async () => {
-        setEmail('admin@restaurant.com');
-        setPassword('admin123');
+        const adminEmail = 'admin@restaurant.com';
+        const adminPass = 'admin123';
+        
+        setEmail(adminEmail);
+        setPassword(adminPass);
         setLoading(true);
-        const result = await signIn('credentials', {
-            email: 'admin@restaurant.com',
-            password: 'admin123',
-            redirect: false,
-        });
-        if (result?.error) {
-            setError(result.error);
+        
+        try {
+            const result = await signIn('credentials', {
+                email: adminEmail,
+                password: adminPass,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                // Offline fallback for quick login
+                const offlineUser = await db.users.get({ email: adminEmail });
+                if (offlineUser) {
+                    const passwordsMatch = await bcrypt.compare(adminPass, offlineUser.passwordHash);
+                    if (passwordsMatch) {
+                        addToast('Logging in offline...', 'info');
+                        localStorage.setItem('offline_session', JSON.stringify({
+                            email: offlineUser.email,
+                            name: offlineUser.name,
+                            role: offlineUser.role,
+                            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                        }));
+                        router.push('/admin/dashboard');
+                        return;
+                    }
+                }
+                setError(result.error);
+                setLoading(false);
+            } else {
+                router.push('/admin/dashboard');
+            }
+        } catch (err) {
+            setError('Connection failed. Please check internet.');
             setLoading(false);
-        } else {
-            router.push('/admin/dashboard');
         }
     };
 

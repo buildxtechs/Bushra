@@ -84,11 +84,17 @@ export default function AdminPOS() {
     const [customerPhone, setCustomerPhone] = useState('');
     const [deliveryAddress, setDeliveryAddress] = useState({ street: '', city: '', pincode: '' });
     const [notes, setNotes] = useState('');
-    const [showPayment, setShowPayment] = useState(false);
-    const [showReceipt, setShowReceipt] = useState(false);
+    const [modalState, setModalState] = useState('none'); // 'none', 'payment', 'success'
     const [lastOrder, setLastOrder] = useState(null);
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // Parcel Options State
+    const [parcelEnabled, setParcelEnabled] = useState(false);
+    const [parcelOptions, setParcelOptions] = useState({ gravy: 0, container: 0 });
+    const PARCEL_CHARGES = { container: 10, gravy: 5 };
+
+    const [printCountdown, setPrintCountdown] = useState(0);
 
     const findAndAddByCode = (val) => {
         if (val.length === 3) {
@@ -189,11 +195,17 @@ export default function AdminPOS() {
 
     const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
     const taxRate = settings?.taxPercentage || 0;
+    
+    // Calculate Parcel Charges
+    const parcelChargesTotal = parcelEnabled 
+        ? (parcelOptions.container * PARCEL_CHARGES.container) + (parcelOptions.gravy * PARCEL_CHARGES.gravy)
+        : 0;
+
     const tax = cart.reduce((s, i) => {
         const itemTaxRate = i.tax !== undefined ? i.tax : taxRate;
         return s + (i.price * i.quantity * itemTaxRate) / 100;
     }, 0);
-    const total = subtotal + tax - discount;
+    const total = subtotal + tax + parcelChargesTotal - discount;
 
     const placeOrder = async () => {
         if (cart.length === 0) { addToast('Add items first', 'warning'); return; }
@@ -208,6 +220,7 @@ export default function AdminPOS() {
             table: selectedTable || undefined,
             orderNotes: notes,
             createdBy: session?.user?.id,
+            parcelOptions: parcelEnabled ? { ...parcelOptions, charges: parcelChargesTotal } : null,
         };
 
         try {
@@ -217,10 +230,9 @@ export default function AdminPOS() {
             const order = await res.json();
             
             if (!res.ok) throw new Error(order.error || 'Failed to place order');
-
+            
             setLastOrder(order);
-            setShowPayment(false);
-            setShowReceipt(true);
+            setModalState('success');
             setCart([]);
             setDiscount(0);
             setCustomerName('Walk-in Customer');
@@ -228,7 +240,22 @@ export default function AdminPOS() {
             setDeliveryAddress({ street: '', city: '', pincode: '' });
             setNotes('');
             setSelectedTable('');
+            setParcelEnabled(false);
+            setParcelOptions({ gravy: 0, container: 0 });
             addToast('Order placed successfully!', 'success');
+
+            // Automated Print with 2-second delay
+            setPrintCountdown(2);
+            const countdownInterval = setInterval(() => {
+                setPrintCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(countdownInterval);
+                        printReceipt();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
 
             // Refresh tables
             const t = await fetch('/api/tables').then(r => r.json()).catch(() => getCachedData('tables'));
@@ -240,8 +267,7 @@ export default function AdminPOS() {
                 await db.offlineOrders.add(offlineOrder);
                 
                 setLastOrder(offlineOrder);
-                setShowPayment(false);
-                setShowReceipt(true);
+                setModalState('success');
                 setCart([]);
                 setDiscount(0);
                 setCustomerName('Walk-in Customer');
@@ -365,7 +391,13 @@ export default function AdminPOS() {
       </table>
       
       <div class="dashed-line"></div>
-      <div class="total-row"><span>Subtotal Total</span><span>₹ ${lastOrder.subtotal.toFixed(2)}</span></div>
+      <div class="total-row"><span>Items Subtotal</span><span>₹ ${lastOrder.subtotal.toFixed(2)}</span></div>
+      ${lastOrder.parcelOptions?.charges > 0 ? `
+        <div class="total-row">
+            <span>Parcel Charges ${lastOrder.parcelOptions.container > 0 ? `(Cont x${lastOrder.parcelOptions.container})` : ''} ${lastOrder.parcelOptions.gravy > 0 ? `(Gravy x${lastOrder.parcelOptions.gravy})` : ''}</span>
+            <span>₹ ${lastOrder.parcelOptions.charges.toFixed(2)}</span>
+        </div>
+      ` : ''}
       ${lastOrder.tax > 0 ? `<div class="total-row"><span>GST</span><span>₹ ${lastOrder.tax.toFixed(2)}</span></div>` : ''}
       ${lastOrder.discount > 0 ? `<div class="total-row"><span>Discount</span><span>-₹ ${lastOrder.discount.toFixed(2)}</span></div>` : ''}
       
@@ -426,21 +458,21 @@ export default function AdminPOS() {
                     }
                 }
 
-                @media (max-width: 768px) {
+                    .cart-column {
+                        position: relative;
+                        height: 100% !important;
+                    }
+                }
+
+                @media (max-width: 600px) {
                     .pos-layout {
-                        grid-template-columns: 1fr;
-                        height: auto;
-                        overflow-y: auto;
                         display: flex;
                         flex-direction: column;
                     }
                     .cart-column {
                         position: sticky;
                         bottom: 0;
-                        height: auto !important;
                         max-height: 80vh;
-                        z-index: 100;
-                        box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
                     }
                 }
                 .tabs {
@@ -605,6 +637,59 @@ export default function AdminPOS() {
                     <div style={{ marginTop: 'var(--space-sm)' }}>
                         <input placeholder="Order Notes (Optional)" value={notes} onChange={e => setNotes(e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: 'var(--font-xs)' }} />
                     </div>
+
+                    {/* Parcel Options */}
+                    <div style={{ 
+                        marginTop: 'var(--space-sm)', 
+                        padding: '10px', 
+                        background: 'rgba(255,255,255,0.03)', 
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-light)'
+                    }}>
+                        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: 'var(--font-xs)', fontWeight: 600 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                📦 Container for Parcel
+                            </div>
+                            <input type="checkbox" checked={parcelEnabled} onChange={e => setParcelEnabled(e.target.checked)} />
+                        </label>
+                        
+                        {parcelEnabled && (
+                            <div className="animate-fadeIn" style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+                                        <input type="checkbox" checked={parcelOptions.container > 0} 
+                                            onChange={e => setParcelOptions(prev => ({ ...prev, container: e.target.checked ? Math.max(1, prev.container) : 0 }))} 
+                                            style={{ marginRight: 6 }}
+                                        />
+                                        Container (₹{PARCEL_CHARGES.container})
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <button onClick={() => setParcelOptions(prev => ({ ...prev, container: Math.max(0, prev.container - 1) }))}
+                                            style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>-</button>
+                                        <span style={{ fontSize: 'var(--font-xs)', fontWeight: 700, width: 15, textAlign: 'center' }}>{parcelOptions.container}</span>
+                                        <button onClick={() => setParcelOptions(prev => ({ ...prev, container: prev.container + 1 }))}
+                                            style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>+</button>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+                                        <input type="checkbox" checked={parcelOptions.gravy > 0} 
+                                            onChange={e => setParcelOptions(prev => ({ ...prev, gravy: e.target.checked ? Math.max(1, prev.gravy) : 0 }))} 
+                                            style={{ marginRight: 6 }}
+                                        />
+                                        Gravy (₹{PARCEL_CHARGES.gravy})
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <button onClick={() => setParcelOptions(prev => ({ ...prev, gravy: Math.max(0, prev.gravy - 1) }))}
+                                            style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>-</button>
+                                        <span style={{ fontSize: 'var(--font-xs)', fontWeight: 700, width: 15, textAlign: 'center' }}>{parcelOptions.gravy}</span>
+                                        <button onClick={() => setParcelOptions(prev => ({ ...prev, gravy: prev.gravy + 1 }))}
+                                            style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12 }}>+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Cart Items */}
@@ -648,6 +733,11 @@ export default function AdminPOS() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                             <span style={{ color: 'var(--text-secondary)' }}>Tax</span><span>₹{tax.toFixed(2)}</span>
                         </div>
+                        {parcelEnabled && parcelChargesTotal > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                                <span style={{ color: 'var(--text-secondary)' }}>Parcel Charges</span><span>₹{parcelChargesTotal.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                             <span style={{ color: 'var(--text-secondary)' }}>Discount</span>
                             <input type="number" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)}
@@ -660,60 +750,82 @@ export default function AdminPOS() {
 
                     <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                         <button onClick={() => { setCart([]); setDiscount(0); }} className="btn btn-secondary" style={{ flex: 1 }} disabled={cart.length === 0}>Clear</button>
-                        <button onClick={() => setShowPayment(true)} className="btn btn-primary" style={{ flex: 2 }} disabled={cart.length === 0}>
+                        <button onClick={() => setModalState('payment')} className="btn btn-primary" style={{ flex: 2 }} disabled={cart.length === 0}>
                             Pay ₹{total.toFixed(0)}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Payment Modal */}
-            <Modal isOpen={showPayment} onClose={() => setShowPayment(false)} title="Payment" width="400px">
-                <div style={{ textAlign: 'center', marginBottom: 'var(--space-lg)' }}>
-                    <div style={{ fontSize: 'var(--font-3xl)', fontWeight: 800, color: 'var(--accent-primary)' }}>
-                        ₹{total.toFixed(2)}
-                    </div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: 'var(--font-sm)' }}>
-                        {cart.reduce((s, i) => s + i.quantity, 0)} items
-                    </div>
-                </div>
-                <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
-                    {[{ v: 'cash', l: '💵 Cash' }, { v: 'card', l: '💳 Card' }, { v: 'upi', l: '📱 UPI' }].map(pm => (
-                        <button key={pm.v} onClick={() => setPaymentMethod(pm.v)}
-                            className="card" style={{
-                                flex: 1, textAlign: 'center', cursor: 'pointer', padding: 'var(--space-md)',
-                                borderColor: paymentMethod === pm.v ? 'var(--accent-primary)' : 'var(--border)',
-                                background: paymentMethod === pm.v ? 'rgba(249,115,22,0.08)' : 'var(--bg-card)',
-                            }}>
-                            <span style={{ fontSize: 'var(--font-md)', fontWeight: 600 }}>{pm.l}</span>
-                        </button>
-                    ))}
-                </div>
-                <button onClick={placeOrder} className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                    Complete Payment
-                </button>
-            </Modal>
-
-            {/* Receipt Modal */}
-            <Modal isOpen={showReceipt} onClose={() => setShowReceipt(false)} title="Order Complete ✅" width="400px">
-                {lastOrder && (
+            {/* Single Unified Checkout Modal */}
+            <Modal 
+                isOpen={modalState !== 'none'} 
+                onClose={() => setModalState('none')} 
+                title={modalState === 'payment' ? 'Payment' : 'Order Complete ✅'} 
+                width="400px"
+            >
+                {modalState === 'payment' ? (
                     <div>
                         <div style={{ textAlign: 'center', marginBottom: 'var(--space-lg)' }}>
-                            <div style={{ fontSize: 48, marginBottom: 'var(--space-sm)' }}>🎉</div>
-                            <h3>Order #{lastOrder.orderId}</h3>
-                            <div style={{ fontSize: 'var(--font-2xl)', fontWeight: 800, color: 'var(--accent-primary)', marginTop: 'var(--space-sm)' }}>
-                                ₹{lastOrder.total?.toFixed(2)}
+                            <div style={{ fontSize: 'var(--font-3xl)', fontWeight: 800, color: 'var(--accent-primary)' }}>
+                                ₹{total.toFixed(2)}
+                            </div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: 'var(--font-sm)' }}>
+                                {cart.reduce((s, i) => s + i.quantity, 0)} items
                             </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-                            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-                                <button onClick={printReceipt} className="btn btn-primary" style={{ flex: 1, height: '50px', fontSize: '16px' }}>🖨️ Print Bill</button>
-                                <button onClick={sendWhatsAppBill} className="btn btn-secondary" style={{ flex: 1, height: '50px', fontSize: '16px', background: '#25D366', color: 'white', border: 'none' }}>
-                                    <span style={{ marginRight: '8px' }}>💬</span> WhatsApp
+                        <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
+                            {[{ v: 'cash', l: '💵 Cash' }, { v: 'card', l: '💳 Card' }, { v: 'upi', l: '📱 UPI' }].map(pm => (
+                                <button key={pm.v} onClick={() => setPaymentMethod(pm.v)}
+                                    className="card" style={{
+                                        flex: 1, textAlign: 'center', cursor: 'pointer', padding: 'var(--space-md)',
+                                        borderColor: paymentMethod === pm.v ? 'var(--accent-primary)' : 'var(--border)',
+                                        background: paymentMethod === pm.v ? 'rgba(249,115,22,0.08)' : 'var(--bg-card)',
+                                    }}>
+                                    <span style={{ fontSize: 'var(--font-md)', fontWeight: 600 }}>{pm.l}</span>
                                 </button>
-                            </div>
-                            <button onClick={() => setShowReceipt(false)} className="btn btn-ghost" style={{ width: '100%', marginTop: 'var(--space-sm)' }}>New Order</button>
+                            ))}
                         </div>
+                        <button onClick={placeOrder} className="btn btn-primary btn-lg" style={{ width: '100%' }}>
+                            Complete Payment
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        {lastOrder && (
+                            <div>
+                                <div style={{ textAlign: 'center', marginBottom: 'var(--space-lg)' }}>
+                                    <div style={{ fontSize: 48, marginBottom: 'var(--space-sm)' }}>🎉</div>
+                                    <h3>Order #{lastOrder.orderId}</h3>
+                                    <div style={{ fontSize: 'var(--font-2xl)', fontWeight: 800, color: 'var(--accent-primary)', marginTop: 'var(--space-sm)' }}>
+                                        ₹{lastOrder.total?.toFixed(2)}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                                    {printCountdown > 0 && (
+                                        <div style={{ 
+                                            padding: '8px', 
+                                            background: 'rgba(249, 115, 22, 0.1)', 
+                                            borderRadius: 'var(--radius-sm)', 
+                                            fontSize: 'var(--font-xs)',
+                                            textAlign: 'center',
+                                            color: 'var(--accent-primary)',
+                                            fontWeight: 700,
+                                            border: '1px solid rgba(249, 115, 22, 0.2)'
+                                        }}>
+                                            ⚡ Auto-printing in {printCountdown}s...
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                                        <button onClick={printReceipt} className="btn btn-primary" style={{ flex: 1, height: '50px', fontSize: '16px' }}>🖨️ Print Bill</button>
+                                        <button onClick={sendWhatsAppBill} className="btn btn-secondary" style={{ flex: 1, height: '50px', fontSize: '16px', background: '#25D366', color: 'white', border: 'none' }}>
+                                            <span style={{ marginRight: '8px' }}>💬</span> WhatsApp
+                                        </button>
+                                    </div>
+                                    <button onClick={() => setModalState('none')} className="btn btn-ghost" style={{ width: '100%', marginTop: 'var(--space-sm)' }}>New Order</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>
