@@ -41,10 +41,11 @@ export default function SettingsPage() {
             if (res.ok) {
                 addToast('Settings saved successfully', 'success');
             } else {
-                addToast('Failed to save settings', 'error');
+                const err = await res.json();
+                addToast(err.error || 'Failed to save settings', 'error');
             }
         } catch (error) {
-            addToast('An error occurred', 'error');
+            addToast('An error occurred while saving', 'error');
         } finally {
             setSaving(false);
         }

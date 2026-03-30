@@ -1,9 +1,11 @@
-import { db } from "@/lib/db";
+import Settings from "@/models/Settings";
+import dbConnect from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const settings = await db.findOne('settings', {});
+        await dbConnect();
+        const settings = await Settings.findOne({}).lean();
         return NextResponse.json(settings || { 
             restaurantName: 'BUSHRA FAMILY RESTAURANT',
             billHeader: '496/2 Bangalore Main Road,\nSS Lodge Ground Floor,\nChengam - 606 709',
@@ -18,18 +20,22 @@ export async function GET() {
 
 export async function POST(req) {
     try {
-        const { _id, __v, ...data } = await req.json();
-        const existing = await db.findOne('settings', {});
+        await dbConnect();
+        const body = await req.json();
+        const { _id, __v, createdAt, updatedAt, ...data } = body;
         
-        if (existing) {
-            await db.update('settings', { _id: existing._id }, data);
-            const updated = await db.findById('settings', existing._id);
-            return NextResponse.json(updated);
+        let settings = await Settings.findOne({});
+        
+        if (settings) {
+            Object.assign(settings, data);
+            await settings.save();
         } else {
-            const newSettings = await db.insert('settings', data);
-            return NextResponse.json(newSettings);
+            settings = await Settings.create(data);
         }
+        
+        return NextResponse.json(settings);
     } catch (error) {
+        console.error('Settings API Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
