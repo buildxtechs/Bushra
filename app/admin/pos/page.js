@@ -207,15 +207,16 @@ export default function AdminPOS() {
     }, 0);
     const total = subtotal + tax + parcelChargesTotal - discount;
 
-    const placeOrder = async () => {
+    const placeOrder = async (overrideMethod = null) => {
         if (cart.length === 0) { addToast('Add items first', 'warning'); return; }
         
+        const method = overrideMethod || paymentMethod;
         const orderData = {
             customerName, customerPhone,
             deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
             items: cart.map(i => ({ menuItem: i._id, name: i.name, price: i.price, quantity: i.quantity, specialInstructions: i.specialInstructions })),
             subtotal, tax, discount, total,
-            type: orderType, paymentMethod,
+            type: orderType, paymentMethod: method,
             paymentStatus: 'paid',
             table: selectedTable || undefined,
             orderNotes: notes,
@@ -776,18 +777,24 @@ export default function AdminPOS() {
                         </div>
                         <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
                             {[{ v: 'cash', l: '💵 Cash' }, { v: 'card', l: '💳 Card' }, { v: 'upi', l: '📱 UPI' }].map(pm => (
-                                <button key={pm.v} onClick={() => setPaymentMethod(pm.v)}
-                                    className="card" style={{
+                                <button key={pm.v} 
+                                    onClick={() => {
+                                        setPaymentMethod(pm.v);
+                                        placeOrder(pm.v);
+                                    }}
+                                    className="card premium-hover" style={{
                                         flex: 1, textAlign: 'center', cursor: 'pointer', padding: 'var(--space-md)',
                                         borderColor: paymentMethod === pm.v ? 'var(--accent-primary)' : 'var(--border)',
                                         background: paymentMethod === pm.v ? 'rgba(249,115,22,0.08)' : 'var(--bg-card)',
+                                        transition: 'all 0.2s ease'
                                     }}>
                                     <span style={{ fontSize: 'var(--font-md)', fontWeight: 600 }}>{pm.l}</span>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: 4 }}>Select to Pay</div>
                                 </button>
                             ))}
                         </div>
-                        <button onClick={placeOrder} className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                            Complete Payment
+                        <button onClick={() => placeOrder()} className="btn btn-ghost" style={{ width: '100%', border: '1px solid var(--border)' }}>
+                            Manual Confirm
                         </button>
                     </div>
                 ) : (
