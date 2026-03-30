@@ -41,11 +41,19 @@ export default function SettingsPage() {
             if (res.ok) {
                 addToast('Settings saved successfully', 'success');
             } else {
-                const err = await res.json();
-                addToast(err.error || 'Failed to save settings', 'error');
+                let errorMsg = 'Failed to save settings';
+                try {
+                    const err = await res.json();
+                    errorMsg = err.error || errorMsg;
+                } catch (e) {
+                    if (res.status === 413) errorMsg = 'Image/Logo is too large! Please use a smaller file.';
+                    console.error('Save failed:', e);
+                }
+                addToast(errorMsg, 'error');
             }
         } catch (error) {
-            addToast('An error occurred while saving', 'error');
+            console.error('Fetch error:', error);
+            addToast('Network error or server timeout', 'error');
         } finally {
             setSaving(false);
         }
@@ -75,11 +83,25 @@ export default function SettingsPage() {
                                 <input type="file" accept="image/*" onChange={async (e) => {
                                     const file = e.target.files[0];
                                     if (file) {
+                                        if (file.size > 2 * 1024 * 1024) return addToast('Image too large! Maximum 2MB.', 'error');
+                                        
                                         const reader = new FileReader();
                                         reader.readAsDataURL(file);
                                         reader.onload = () => {
-                                            setSettings({ ...settings, logoUrl: reader.result });
-                                            addToast('Logo attached!', 'success');
+                                            const img = new Image();
+                                            img.src = reader.result;
+                                            img.onload = () => {
+                                                const canvas = document.createElement('canvas');
+                                                const MAX_WIDTH = 400;
+                                                const scale = MAX_WIDTH / img.width;
+                                                canvas.width = MAX_WIDTH;
+                                                canvas.height = img.height * scale;
+                                                const ctx = canvas.getContext('2d');
+                                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                                const compressed = canvas.toDataURL('image/jpeg', 0.8);
+                                                setSettings({ ...settings, logoUrl: compressed });
+                                                addToast('Logo attached and optimized!', 'success');
+                                            };
                                         };
                                     }
                                 }} style={{ flex: 1, fontSize: 'var(--font-xs)' }} />
