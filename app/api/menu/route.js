@@ -2,44 +2,61 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { uploadImage } from "@/lib/cloudinary";
 
-export async function GET() {
+export async function GET(req) {
     try {
-        // Optimize: Calculate sales counts using MongoDB aggregation (much faster for large datasets)
-        const salesStats = await db.aggregate('orders', [
-            {
-                $match: {
-                    $or: [
-                        { status: { $in: ['completed', 'paid', 'served', 'delivered'] } },
-                        { paymentStatus: 'paid' }
-                    ]
-                }
-            },
-            { $unwind: '$items' },
-            {
-                $group: {
-                    _id: { $ifNull: ['$items.item', '$items.menuItem'] },
-                    totalSales: { $sum: '$items.quantity' }
-                }
-            }
+        const { searchParams } = new URL(req.url);
+        const includeStats = searchParams.get('stats') === 'true';
+
+        // Concurrently fetch menu items and categories
+        const [menuItems, categories] = await Promise.all([
+            db.read('menuitems'),
+            db.read('categories')
         ]);
 
-        const salesCount = {};
-        salesStats.forEach(stat => {
-            if (stat._id) salesCount[String(stat._id)] = stat.totalSales;
-        });
+        let salesCount = {};
+        if (includeStats) {
+            // Only aggregate if explicitly requested (heavy operation)
+            const salesStats = await db.aggregate('orders', [
+                {
+                    $match: {
+                        $or: [
+                            { status: { $in: ['completed', 'paid', 'served', 'delivered'] } },
+                            { paymentStatus: 'paid' }
+                        ]
+                    }
+                },
+                { $unwind: '$items' },
+                {
+                    $group: {
+                        _id: { $ifNull: ['$items.item', '$items.menuItem'] },
+                        totalSales: { $sum: '$items.quantity' }
+                    }
+                }
+            ]);
 
-        const menuItems = await db.read('menuitems');
-        const categories = await db.read('categories');
+            salesStats.forEach(stat => {
+                if (stat._id) salesCount[String(stat._id)] = stat.totalSales;
+            });
+        }
 
-        // Manual population and adding salesCount
+        // Efficiently map categories and stats
+        const categoryMap = categories.reduce((acc, cat) => {
+            acc[String(cat._id)] = cat;
+            return acc;
+        }, {});
+
         const populatedMenu = menuItems.map(item => ({
             ...item,
             salesCount: salesCount[String(item._id)] || 0,
-            category: categories.find(c => String(c._id) === String(item.category)) || item.category
+            category: categoryMap[String(item.category)] || item.category
         }));
 
-        // Sort by salesCount (descending)
-        populatedMenu.sort((a, b) => b.salesCount - a.salesCount);
+        // Sort by salesCount if stats are included, otherwise by name/code
+        if (includeStats) {
+            populatedMenu.sort((a, b) => b.salesCount - a.salesCount);
+        } else {
+            populatedMenu.sort((a, b) => (a.code || '').localeCompare(b.code || '') || a.name.localeCompare(b.name));
+        }
 
         return NextResponse.json(populatedMenu);
     } catch (error) {
